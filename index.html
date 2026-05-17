@@ -623,25 +623,27 @@
 
         /* Achievements & Visualization */
         .achievements-container {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 10px;
             margin-bottom: 25px;
         }
         .badge {
             background-color: #f1f5f9;
             border: 2px solid #e2e8f0;
-            border-radius: 50%;
-            width: 65px;
-            height: 65px;
+            border-radius: 14px;
+            min-height: 92px;
+            padding: 12px 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 0.65rem;
+            gap: 4px;
+            font-size: 0.75rem;
+            font-weight: 800;
             text-align: center;
             color: #94a3b8;
-            opacity: 0.5;
+            opacity: 0.72;
             transition: all 0.3s;
         }
         .badge.unlocked {
@@ -653,7 +655,29 @@
         }
         .badge-icon {
             font-size: 1.5rem;
-            margin-bottom: 2px;
+            line-height: 1;
+        }
+        .badge-progress {
+            color: #64748b;
+            font-size: 0.66rem;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+        .badge.unlocked .badge-progress {
+            color: #b45309;
+        }
+        .badge-state {
+            border-radius: 999px;
+            padding: 2px 7px;
+            background: #e2e8f0;
+            color: #64748b;
+            font-size: 0.58rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .badge.unlocked .badge-state {
+            background: #f59e0b;
+            color: white;
         }
 
         .chart-container {
@@ -826,104 +850,163 @@
         
         /* Metronome */
         .metronome-card {
-            background-color: rgba(248, 250, 252, 0.7);
-            border: 2px dashed #cbd5e1;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.9)),
+                radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.18), transparent 45%);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+            overflow: hidden;
         }
 
         /* Realistic Metronome Styling */
         .metronome-wrapper {
             position: relative;
-            width: 160px;
-            margin: 0 auto 20px;
-        }
-
-        .metronome-visual {
-            width: 160px;
-            height: 220px;
-            position: relative;
-            background: linear-gradient(to bottom, #7c3aed, #4c1d95);
-            clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%);
-            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+            width: 210px;
+            height: 285px;
+            margin: 6px auto 22px;
             display: flex;
             justify-content: center;
             align-items: flex-end;
-            padding-bottom: 15px;
+        }
+
+        .metronome-visual {
+            width: 190px;
+            height: 260px;
+            position: relative;
+            background:
+                linear-gradient(145deg, #111827 0%, #1f2937 45%, #0f172a 100%);
+            clip-path: polygon(28% 0%, 72% 0%, 98% 100%, 2% 100%);
+            box-shadow: 0 18px 28px rgba(15, 23, 42, 0.32), inset 0 0 0 1px rgba(255,255,255,0.08);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 18px;
         }
 
         .metronome-face {
-            width: 120px;
-            height: 190px;
-            background: #f1f5f9;
+            width: 142px;
+            height: 224px;
+            background:
+                linear-gradient(180deg, #f8fafc, #dbeafe 58%, #cbd5e1);
             clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
             position: relative;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: inset 0 2px 8px rgba(15,23,42,0.12), 0 0 0 1px rgba(255,255,255,0.65);
             display: flex;
             flex-direction: column;
             align-items: center;
+        }
+
+        .metronome-face::after {
+            content: "";
+            position: absolute;
+            left: 20px;
+            right: 20px;
+            bottom: 18px;
+            height: 12px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.16);
         }
 
         .metronome-ticks {
             position: absolute;
-            top: 20px;
-            bottom: 40px;
-            width: 40px;
+            top: 24px;
+            bottom: 48px;
+            width: 54px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
-            opacity: 0.15;
+            opacity: 0.42;
             z-index: 1;
         }
 
         .tick-mark {
             width: 100%;
-            height: 1px;
-            background: #0f172a;
+            height: 2px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.7);
         }
 
         .pendulum-container {
             position: absolute;
-            bottom: 25px;
+            bottom: 34px;
             left: 50%;
             width: 0px;
-            height: 150px;
+            height: 184px;
             transform-origin: bottom center;
             z-index: 2;
         }
 
         .pendulum-arm {
-            width: 4px;
+            width: 5px;
             height: 100%;
-            background: #334155;
+            background: linear-gradient(90deg, #64748b, #f8fafc, #334155);
             position: absolute;
             bottom: 0;
-            left: -2px;
+            left: -2.5px;
             border-radius: 2px;
+            box-shadow: 0 2px 6px rgba(15,23,42,0.24);
         }
 
         .pendulum-weight {
-            width: 20px;
-            height: 20px;
-            background: linear-gradient(135deg, #fbbf24, #d97706);
-            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #fde68a, #f59e0b 52%, #b45309);
+            border-radius: 8px;
             position: absolute;
-            left: -10px;
+            left: -14px;
             top: 60px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            border: 1px solid #b45309;
+            box-shadow: 0 7px 12px rgba(15,23,42,0.28), inset 0 1px 1px rgba(255,255,255,0.55);
+            border: 1px solid rgba(146, 64, 14, 0.5);
             transition: top 0.2s, background 0.1s;
         }
 
         .pendulum-pivot {
-            width: 12px;
-            height: 12px;
-            background: #1e293b;
+            width: 18px;
+            height: 18px;
+            background: radial-gradient(circle at 35% 30%, #f8fafc, #475569 55%, #0f172a);
             border-radius: 50%;
             position: absolute;
-            bottom: -6px;
-            left: -6px;
+            bottom: -9px;
+            left: -9px;
             z-index: 3;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            box-shadow: 0 3px 7px rgba(0,0,0,0.45);
+        }
+
+        .metronome-readout {
+            text-align: center;
+            margin-bottom: 14px;
+        }
+        .metronome-readout #bpmDisplay {
+            font-size: 2.35rem;
+            font-weight: 900;
+            color: #1e293b;
+            letter-spacing: 0;
+        }
+        .tempo-label {
+            display: inline-flex;
+            margin-top: 5px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 0.76rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .bpm-slider {
+            width: 100%;
+            accent-color: #3b82f6;
+            margin-bottom: 16px;
+        }
+        .tempo-rail {
+            display: flex;
+            justify-content: space-between;
+            color: #64748b;
+            font-size: 0.72rem;
+            font-weight: 800;
+            margin-top: -8px;
+            margin-bottom: 15px;
         }
 
         .empty-message {
@@ -957,6 +1040,157 @@
             padding: 8px 12px;
             border-radius: 10px;
             font-size: 0.75rem;
+        }
+
+        /* Smart Practice Plan */
+        .practice-plan-card {
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+            animation: fadeIn 0.4s ease-out;
+        }
+        .practice-plan-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .practice-plan-title {
+            color: #1e293b;
+            font-size: 1rem;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+        .practice-plan-subtitle {
+            color: #64748b;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        .practice-plan-total {
+            background: #e0f2fe;
+            color: #0369a1;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+        .practice-plan-list {
+            display: grid;
+            gap: 10px;
+        }
+        .practice-plan-item {
+            display: grid;
+            grid-template-columns: 42px 1fr auto;
+            align-items: center;
+            gap: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px;
+        }
+        .plan-minutes {
+            background: #1e293b;
+            color: white;
+            border-radius: 10px;
+            padding: 8px 6px;
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 900;
+        }
+        .plan-label {
+            color: #0f172a;
+            font-size: 0.88rem;
+            font-weight: 800;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+        .plan-reason {
+            color: #64748b;
+            font-size: 0.74rem;
+            line-height: 1.35;
+            margin-top: 2px;
+        }
+        .plan-use-btn {
+            background: #3b82f6;
+            color: white;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 0.74rem;
+            white-space: nowrap;
+        }
+        .custom-plan-form {
+            display: grid;
+            grid-template-columns: 1fr 82px;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .custom-plan-form input {
+            margin-bottom: 0;
+        }
+        .custom-plan-note {
+            grid-column: 1 / -1;
+        }
+        .custom-plan-empty {
+            color: #94a3b8;
+            font-size: 0.82rem;
+            font-style: italic;
+            line-height: 1.4;
+            padding: 8px 2px 2px;
+        }
+        .plan-delete-btn {
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 8px 9px;
+            font-size: 0.74rem;
+            white-space: nowrap;
+        }
+        .plan-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+        .settings-toggle-list {
+            display: grid;
+            gap: 14px;
+        }
+        .feature-disabled-panel {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px dashed #cbd5e1;
+            border-radius: 14px;
+            color: #64748b;
+            padding: 16px;
+            text-align: center;
+            font-size: 0.86rem;
+            font-weight: 700;
+            line-height: 1.4;
+            margin-bottom: 18px;
+        }
+        .feature-disabled-panel button {
+            margin-top: 12px;
+            width: 100%;
+        }
+
+        @media (max-width: 380px) {
+            .practice-plan-item {
+                grid-template-columns: 42px 1fr;
+            }
+            .plan-use-btn {
+                grid-column: 1 / -1;
+                width: 100%;
+            }
+            .plan-actions {
+                grid-column: 1 / -1;
+            }
+            .custom-plan-form {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* View Sections */
@@ -1240,9 +1474,11 @@
         body.dark-mode .session-notes { background-color: #0f172a; color: #cbd5e1; }
         body.dark-mode .chart-val { color: #cbd5e1; }
         body.dark-mode .chart-label { color: #94a3b8; }
-        body.dark-mode .metronome-card { background-color: rgba(30, 41, 59, 0.7); border-color: #475569; }
-        body.dark-mode .metronome-face { background: #0f172a; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        body.dark-mode .metronome-card { background: linear-gradient(180deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95)); border-color: #475569; }
+        body.dark-mode .metronome-face { background: linear-gradient(180deg, #1e293b, #0f172a); box-shadow: inset 0 0 12px rgba(0,0,0,0.5); }
         body.dark-mode .tick-mark { background: #334155; }
+        body.dark-mode .tempo-label { background: rgba(59, 130, 246, 0.18); color: #93c5fd; }
+        body.dark-mode .tempo-rail { color: #94a3b8; }
         
         body.dark-mode .piece-tag {
             background-color: #1e293b;
@@ -1264,6 +1500,48 @@
             background-color: rgba(245, 158, 11, 0.15);
             border-color: #f59e0b;
             color: #fcd34d;
+        }
+        body.dark-mode .badge-progress { color: #94a3b8; }
+        body.dark-mode .badge.unlocked .badge-progress { color: #fcd34d; }
+        body.dark-mode .badge-state {
+            background: #334155;
+            color: #cbd5e1;
+        }
+        body.dark-mode .badge.unlocked .badge-state {
+            background: #f59e0b;
+            color: #111827;
+        }
+        body.dark-mode .practice-plan-card {
+            background: rgba(30, 41, 59, 0.92);
+            border-color: #334155;
+        }
+        body.dark-mode .practice-plan-title,
+        body.dark-mode .plan-label {
+            color: #e2e8f0;
+        }
+        body.dark-mode .practice-plan-subtitle,
+        body.dark-mode .plan-reason {
+            color: #94a3b8;
+        }
+        body.dark-mode .practice-plan-item {
+            background: #0f172a;
+            border-color: #334155;
+        }
+        body.dark-mode .practice-plan-total {
+            background: rgba(59, 130, 246, 0.18);
+            color: #93c5fd;
+        }
+        body.dark-mode .plan-minutes {
+            background: #334155;
+        }
+        body.dark-mode .plan-delete-btn {
+            color: #fca5a5;
+            border-color: #7f1d1d;
+        }
+        body.dark-mode .feature-disabled-panel {
+            background: rgba(15, 23, 42, 0.88);
+            border-color: #475569;
+            color: #94a3b8;
         }
         
         body.dark-mode .btn-clear {
@@ -1372,6 +1650,7 @@
             <div id="view-log" class="view-section active">
             <!-- Recommendations generated by JS -->
             <div id="recommendations" class="recommendations-container"></div>
+            <div id="practicePlan"></div>
 
             <!-- Add Practice Card -->
             <div class="card">
@@ -1507,16 +1786,24 @@
                         </div>
                     </div>
                     
-                    <div style="text-align:center; margin-bottom: 10px; font-size: 2.5rem; font-weight: bold; color: #1e293b;" id="bpmDisplay">120 BPM</div>
-                    <input type="range" id="bpmSlider" min="40" max="240" value="120" style="width: 100%; margin-bottom: 15px;">
-                    <button class="btn-metro" id="metroBtn" onclick="toggleMetronome()" style="width: 100%;">Start Metronome</button>
+                    <div class="metronome-readout">
+                        <div id="bpmDisplay">120 BPM</div>
+                        <div class="tempo-label" id="tempoLabel">Moderato</div>
+                    </div>
+                    <input type="range" id="bpmSlider" class="bpm-slider" min="40" max="240" value="120">
+                    <div class="tempo-rail">
+                        <span>Slow</span>
+                        <span>Steady</span>
+                        <span>Fast</span>
+                    </div>
+                    <button class="btn-metro" id="metroBtn" onclick="toggleMetronome(event)" style="width: 100%;">Start Metronome</button>
                 </div>
             </div>
 
             <!-- Summary View -->
             <div id="view-summary" class="view-section">
-                <h2>Achievements</h2>
-                <div id="achievementsList" class="achievements-container"></div>
+                <h2>Practice Plan</h2>
+                <div id="customPracticePlan"></div>
 
                 <h2>Weekly Trend</h2>
                 <div id="weeklyChart" class="chart-container"></div>
@@ -1529,6 +1816,9 @@
                     <!-- Tags generated by JS -->
                 </div>
                 <div id="emptySummaryMessage" class="empty-message">Add a practice to see your progress!</div>
+
+                <h2>Achievements</h2>
+                <div id="achievementsList" class="achievements-container"></div>
             </div>
 
             <!-- History View -->
@@ -1589,6 +1879,53 @@
                         <input type="number" id="settingsDailyGoal" value="30" onchange="updateDailyGoal()" style="margin-top: 5px;">
                     </div>
                     <div class="form-section">
+                        <div class="form-section-title">🧩 Features</div>
+                        <div class="settings-toggle-list">
+                            <label class="toggle-switch-container" style="justify-content: space-between; display: flex; width: 100%;">
+                                <span style="font-size: 1rem; color: inherit;">Smart Practice Plan</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="featureSmartPlan" onchange="updateFeatureSetting('smartPlan', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                            <label class="toggle-switch-container" style="justify-content: space-between; display: flex; width: 100%;">
+                                <span style="font-size: 1rem; color: inherit;">Custom Practice Plan</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="featureCustomPlan" onchange="updateFeatureSetting('customPlan', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                            <label class="toggle-switch-container" style="justify-content: space-between; display: flex; width: 100%;">
+                                <span style="font-size: 1rem; color: inherit;">Comeback Suggestions</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="featureRecommendations" onchange="updateFeatureSetting('recommendations', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                            <label class="toggle-switch-container" style="justify-content: space-between; display: flex; width: 100%;">
+                                <span style="font-size: 1rem; color: inherit;">Summary Achievements</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="featureAchievements" onchange="updateFeatureSetting('achievements', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                            <label class="toggle-switch-container" style="justify-content: space-between; display: flex; width: 100%;">
+                                <span style="font-size: 1rem; color: inherit;">Summary Charts</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="featureCharts" onchange="updateFeatureSetting('charts', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                            <label class="toggle-switch-container" style="justify-content: space-between; display: flex; width: 100%;">
+                                <span style="font-size: 1rem; color: inherit;">Floating Background Notes</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="featureFloatingSymbols" onchange="updateFeatureSetting('floatingSymbols', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-section">
                         <div class="form-section-title">📖 Help & Guide</div>
                         <button class="btn-timer" style="width: 100%; margin-top: 5px;" onclick="showHelpPopup()">View How-To Guide</button>
                     </div>
@@ -1645,16 +1982,38 @@
         // 1. Data Setup
         // We store an array of "session" objects.
         // We use a new localStorage key 'musicTrackerSessions' to hold our new detailed records.
+        const defaultSettings = {
+            darkMode: false,
+            dailyGoal: 30,
+            smartPlan: true,
+            customPlan: true,
+            recommendations: true,
+            achievements: true,
+            charts: true,
+            floatingSymbols: true
+        };
         let sessions = JSON.parse(localStorage.getItem('musicTrackerSessions')) || [];
-        let userSettings = JSON.parse(localStorage.getItem('virtuosoSettings')) || { darkMode: false, dailyGoal: 30 };
+        let userSettings = { ...defaultSettings, ...(JSON.parse(localStorage.getItem('virtuosoSettings')) || {}) };
+        let customPracticePlan = JSON.parse(localStorage.getItem('virtuosoCustomPracticePlan')) || [];
         
         // Timer variables
         let isTimerRunning = false;
         let timerSeconds = 0;
         let timerInterval = null;
         let timerMode = 'timer'; // 'timer' (countdown) or 'stopwatch' (countup)
+        let timerStartedAt = null;
+        let timerTargetSeconds = 0;
         let currentRating = 3;
         let lastAiReview = null; // Stores the result of the last Auto-Listen analysis
+        let generatedPracticePlan = [];
+        let audioCtx = null;
+        let metroInterval = null;
+        let isMetroRunning = false;
+        let currentBpm = 120;
+        let nextNoteTime = 0.0;
+        let scheduleAheadTime = 0.1;
+        let isLeft = true;
+        let beatFlashTimeout = null;
 
         // Expanded Database of popular pieces and exercises
         const popularPiecesDB = [
@@ -1762,6 +2121,26 @@
                 document.getElementById('darkModeToggle').checked = true;
             }
             document.getElementById('settingsDailyGoal').value = userSettings.dailyGoal || 30;
+            syncSettingsControls();
+            applyFeatureVisibility();
+        }
+
+        function syncSettingsControls() {
+            const featureToggles = {
+                featureSmartPlan: 'smartPlan',
+                featureCustomPlan: 'customPlan',
+                featureRecommendations: 'recommendations',
+                featureAchievements: 'achievements',
+                featureCharts: 'charts',
+                featureFloatingSymbols: 'floatingSymbols'
+            };
+
+            document.getElementById('darkModeToggle').checked = !!userSettings.darkMode;
+            document.getElementById('settingsDailyGoal').value = userSettings.dailyGoal || 30;
+            for (const [id, key] of Object.entries(featureToggles)) {
+                const input = document.getElementById(id);
+                if (input) input.checked = userSettings[key] !== false;
+            }
         }
 
         function enterApp() {
@@ -1792,15 +2171,27 @@
             document.getElementById('bpmSlider').addEventListener('input', function(e) {
                 currentBpm = parseInt(e.target.value);
                 document.getElementById('bpmDisplay').innerText = `${currentBpm} BPM`;
+                const tempoLabel = document.getElementById('tempoLabel');
+                if (tempoLabel) tempoLabel.innerText = getTempoLabel(currentBpm);
                 
                 const weight = document.getElementById('pendulumWeight');
                 if (weight) {
                     const percent = (currentBpm - 40) / (240 - 40);
-                    const topPos = 10 + (percent * 100); 
+                    const topPos = 32 + (percent * 92); 
                     weight.style.top = `${topPos}px`;
                 }
             });
             document.getElementById('bpmSlider').dispatchEvent(new Event('input'));
+        }
+
+        function getTempoLabel(bpm) {
+            if (bpm < 60) return "Largo";
+            if (bpm < 76) return "Adagio";
+            if (bpm < 108) return "Andante";
+            if (bpm < 121) return "Moderato";
+            if (bpm < 156) return "Allegro";
+            if (bpm < 176) return "Vivace";
+            return "Presto";
         }
 
         // Setup Google-style search autocomplete
@@ -1864,6 +2255,24 @@
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
+        }
+
+        function escapeHTML(value) {
+            const div = document.createElement('div');
+            div.innerText = value ?? '';
+            return div.innerHTML;
+        }
+
+        function getSessionMinutes(session) {
+            const minutes = Number(session.minutes);
+            return Number.isFinite(minutes) && minutes > 0 ? minutes : 0;
+        }
+
+        function getUniquePracticeDates() {
+            return [...new Set(sessions
+                .map(session => session.date)
+                .filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date))
+            )].sort();
         }
 
         // 2. Saving a Session
@@ -1934,8 +2343,21 @@
         }
 
         // 3. Timer Logic
+        function getTimerElapsedSeconds() {
+            if (!timerStartedAt) return 0;
+            return Math.max(0, Math.floor((Date.now() - timerStartedAt) / 1000));
+        }
+
+        function resetTimerState() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            isTimerRunning = false;
+            timerStartedAt = null;
+            timerTargetSeconds = 0;
+            timerSeconds = 0;
+        }
+
         function toggleTimer(targetReached = false) {
-            const pieceInput = document.getElementById('pieceName');
             const timerBtn = document.getElementById('timerBtn');
             const timerDisplay = document.getElementById('timerDisplay');
             const btnManualSave = document.getElementById('btnManualSave');
@@ -1947,8 +2369,8 @@
 
             if (!isTimerRunning) {
                 // STARTING THE TIMER
-                if (pieceInput.value.trim() === "") {
-                    timerHelpText.innerText = "❌ Please enter a piece name before starting the timer.";
+                if (document.getElementById('pieceName').value.trim() === "") {
+                    timerHelpText.innerText = "❌ Please enter a piece name before starting.";
                     timerHelpText.style.display = "block";
                     setTimeout(() => { timerHelpText.style.display = "none"; }, 4000);
                     return;
@@ -1958,11 +2380,15 @@
                 if (timerMode === 'timer' && (isNaN(targetVal) || targetVal <= 0)) {
                     timerHelpText.innerText = "❌ Please set target minutes for the timer.";
                     timerHelpText.style.display = "block";
+                    setTimeout(() => { timerHelpText.style.display = "none"; }, 4000);
                     return;
                 }
 
                 if (timerMode === 'timer') document.getElementById('practiceMinutes').dataset.initialTarget = targetVal;
                 timerHelpText.style.display = "none";
+                actionHelpText.style.color = "#64748b";
+                lastAiReview = null;
+                document.getElementById('micFeedback').style.display = "none";
 
                 // Only start listening if the toggle is ON
                 if (micToggle.checked) {
@@ -1970,9 +2396,11 @@
                 }
 
                 isTimerRunning = true;
-                timerSeconds = (timerMode === 'timer') ? targetVal * 60 : 0;
+                timerStartedAt = Date.now();
+                timerTargetSeconds = (timerMode === 'timer') ? targetVal * 60 : 0;
+                timerSeconds = (timerMode === 'timer') ? timerTargetSeconds : 0;
                 
-                timerBtn.innerText = "⏹ Stop Timer";
+                timerBtn.innerText = (timerMode === 'timer') ? "⏹ Stop Timer" : "⏹ Stop Stopwatch";
                 timerBtn.classList.remove('btn-timer');
                 timerBtn.classList.add('btn-timer-stop');
                 timerDisplay.style.display = "block";
@@ -1980,31 +2408,29 @@
                 btnManualSave.style.display = "none";
                 
                 if (timerMode === 'timer') {
+                    targetInputGroup.style.display = 'block';
+                    if (separator) separator.style.display = 'block';
+                    document.getElementById('minsLabel').innerText = "Target Mins";
                     actionHelpText.innerText = `Goal: ${targetVal} min. Auto-saving when finished.`;
                     document.getElementById('timerDisplay').innerText = formatTimerTime(timerSeconds);
                 } else {
+                    targetInputGroup.style.display = 'none';
+                    if (separator) separator.style.display = 'none';
                     actionHelpText.innerText = "Stopwatch active. Track your progress!";
+                    document.getElementById('timerDisplay').innerText = "00:00";
                 }
 
                 timerInterval = setInterval(updateTimerDisplay, 1000);
             } else {
                 // STOPPING THE TIMER
-                clearInterval(timerInterval);
-                isTimerRunning = false;
-
-                let elapsed;
-                if (timerMode === 'timer') {
-                    const initial = parseInt(document.getElementById('practiceMinutes').dataset.initialTarget) || 0;
-                    elapsed = (initial * 60) - timerSeconds;
-                } else {
-                    elapsed = timerSeconds;
-                }
+                const elapsed = getTimerElapsedSeconds();
+                resetTimerState();
 
                 // If mic was on, stopMicAnalyzerAndRate will handle the calculated minutes update
                 if (isMicListening) {
                     stopMicAnalyzerAndRate(elapsed);
                 } else {
-                    document.getElementById('practiceMinutes').value = Math.max(1, Math.ceil(elapsed / 60));
+                    document.getElementById('practiceMinutes').value = elapsed > 0 ? Math.max(1, Math.ceil(elapsed / 60)) : "";
                 }
 
                 document.getElementById('practiceMinutes').disabled = false;
@@ -2029,19 +2455,22 @@
                     }, 1500);
                 } else {
                     btnManualSave.style.display = "block";
-                    actionHelpText.innerText = "Timer stopped. Fill out your review and click Save below.";
+                    actionHelpText.style.color = "#64748b";
+                    actionHelpText.innerText = "Session stopped. Add the piece name and review, then click Save.";
                 }
             }
         }
 
         function updateTimerDisplay() {
             if (timerMode === 'timer') {
-                timerSeconds--;
-                if (timerSeconds <= 0) {
+                const elapsed = getTimerElapsedSeconds();
+                timerSeconds = Math.max(0, timerTargetSeconds - elapsed);
+                if (timerSeconds <= 0 && isTimerRunning) {
                     toggleTimer(true);
+                    return;
                 }
             } else {
-                timerSeconds++;
+                timerSeconds = getTimerElapsedSeconds();
             }
             
             document.getElementById('timerDisplay').innerText = formatTimerTime(timerSeconds);
@@ -2102,6 +2531,26 @@
             saveSettings();
         }
 
+        function updateFeatureSetting(key, value) {
+            if (!(key in defaultSettings)) return;
+            userSettings[key] = value;
+            saveSettings();
+            syncSettingsControls();
+            applyFeatureVisibility();
+            updateUI();
+        }
+
+        function applyFeatureVisibility() {
+            document.getElementById('appFloatingSymbols').style.display = userSettings.floatingSymbols ? 'block' : 'none';
+            document.querySelectorAll('#startScreen .floating-symbols').forEach(el => {
+                el.style.display = userSettings.floatingSymbols ? 'block' : 'none';
+            });
+        }
+
+        function enableFeature(key) {
+            updateFeatureSetting(key, true);
+        }
+
         function setTimerMode(mode) {
             if (isTimerRunning) return; // Prevent changing mode while running
             timerMode = mode;
@@ -2132,7 +2581,8 @@
                     <p style="margin-bottom: 12px;"><strong>1. Tracking Time:</strong> Use <b>Timer</b> mode to set a countdown goal or <b>Stopwatch</b> to count up as you play.</p>
                     <p style="margin-bottom: 12px;"><strong>2. Auto-Listen AI:</strong> This analyzes your playing frequency. It <i>only</i> starts when you press the Start button.</p>
                     <p style="margin-bottom: 12px;"><strong>3. Actual Minutes:</strong> With Auto-Listen on, your logged time is adjusted to show <i>actual</i> playing time vs. silence.</p>
-                    <p><strong>4. Insights:</strong> Tap sessions in <b>History</b> to see notes and 🤖 AI reviews.</p>
+                    <p style="margin-bottom: 12px;"><strong>4. Plans:</strong> Use the smart plan or build your own practice blocks from the Log screen.</p>
+                    <p><strong>5. Settings:</strong> Turn optional panels on or off whenever you want a simpler app.</p>
                 </div>
             `;
             showInAppModal("How to use Virtuoso", helpContent);
@@ -2169,6 +2619,10 @@
         function saveData() {
             localStorage.setItem('musicTrackerSessions', JSON.stringify(sessions));
         }
+
+        function saveCustomPracticePlan() {
+            localStorage.setItem('virtuosoCustomPracticePlan', JSON.stringify(customPracticePlan));
+        }
         
         function saveSettings() {
             localStorage.setItem('virtuosoSettings', JSON.stringify(userSettings));
@@ -2186,11 +2640,259 @@
         // 6. Master function to update all UI sections
         function updateUI() {
             renderDashboard();
+            renderPracticePlan();
+            renderCustomPracticePlan();
             renderPieceSummary();
             renderSessionLog();
             renderAchievements();
             renderCharts();
             renderRecommendations();
+        }
+
+        function buildPracticePlan() {
+            const dailyGoal = userSettings.dailyGoal || 30;
+            const todayStr = getTodayDateString();
+            const todayMinutes = sessions
+                .filter(s => s.date === todayStr)
+                .reduce((sum, s) => sum + s.minutes, 0);
+            const remainingMinutes = Math.max(15, dailyGoal - todayMinutes);
+            const targetMinutes = Math.min(75, remainingMinutes);
+
+            const plan = [
+                {
+                    pieceName: "Technique Warmup",
+                    minutes: Math.max(5, Math.round(targetMinutes * 0.2)),
+                    difficulty: "Easy",
+                    focus: false,
+                    reason: "Start with slow scales, arpeggios, or hand independence before repertoire.",
+                    notes: "Warmup: slow tempo, relaxed hands, even tone."
+                }
+            ];
+
+            const pieceStats = {};
+            sessions.forEach(session => {
+                const name = session.pieceName;
+                if (!pieceStats[name]) {
+                    pieceStats[name] = {
+                        name,
+                        minutes: 0,
+                        count: 0,
+                        lastDate: session.date,
+                        ratingTotal: 0,
+                        focus: false,
+                        difficulty: session.difficulty || "Medium"
+                    };
+                }
+                pieceStats[name].minutes += session.minutes;
+                pieceStats[name].count += 1;
+                pieceStats[name].ratingTotal += session.rating || 3;
+                if (session.date > pieceStats[name].lastDate) {
+                    pieceStats[name].lastDate = session.date;
+                    pieceStats[name].difficulty = session.difficulty || pieceStats[name].difficulty;
+                }
+                if (session.isFocus) pieceStats[name].focus = true;
+            });
+
+            const today = new Date(todayStr + 'T00:00:00');
+            const candidates = Object.values(pieceStats).map(piece => {
+                const lastDate = new Date(piece.lastDate + 'T00:00:00');
+                const daysAway = Math.max(0, Math.floor((today - lastDate) / (1000 * 60 * 60 * 24)));
+                const averageRating = piece.ratingTotal / piece.count;
+                const difficultyWeight = piece.difficulty === "Hard" ? 12 : piece.difficulty === "Medium" ? 7 : 3;
+                const focusWeight = piece.focus ? 18 : 0;
+                const ratingWeight = averageRating < 3.5 ? 12 : averageRating < 4.5 ? 5 : 0;
+                return {
+                    ...piece,
+                    daysAway,
+                    averageRating,
+                    score: daysAway * 3 + difficultyWeight + focusWeight + ratingWeight
+                };
+            }).sort((a, b) => b.score - a.score);
+
+            if (candidates.length > 0) {
+                const main = candidates[0];
+                plan.push({
+                    pieceName: main.name,
+                    minutes: Math.max(10, Math.round(targetMinutes * 0.55)),
+                    difficulty: main.difficulty,
+                    focus: true,
+                    reason: main.daysAway > 0 ? `Priority piece: last practiced ${main.daysAway} day${main.daysAway === 1 ? '' : 's'} ago.` : "Priority piece: continue today's momentum while it is fresh.",
+                    notes: "Main work: isolate the hardest 4-8 measures, then connect them slowly."
+                });
+            } else {
+                plan.push({
+                    pieceName: "New Piano Piece",
+                    minutes: Math.max(10, Math.round(targetMinutes * 0.55)),
+                    difficulty: "Medium",
+                    focus: true,
+                    reason: "Choose the piece you most want to move forward today.",
+                    notes: "Main work: pick one short section and practice it slowly with the metronome."
+                });
+            }
+
+            const review = candidates.find(piece => piece.name !== plan[1].pieceName && piece.daysAway >= 2) || candidates.find(piece => piece.name !== plan[1].pieceName);
+            if (review) {
+                plan.push({
+                    pieceName: review.name,
+                    minutes: Math.max(5, targetMinutes - plan.reduce((sum, item) => sum + item.minutes, 0)),
+                    difficulty: review.difficulty,
+                    focus: false,
+                    reason: review.daysAway >= 2 ? `Retention review: ${review.daysAway} days since the last pass.` : "Quick polish pass to keep it under your fingers.",
+                    notes: "Review: play once for memory, then once for musical shape."
+                });
+            } else {
+                plan.push({
+                    pieceName: "Sight Reading",
+                    minutes: Math.max(5, targetMinutes - plan.reduce((sum, item) => sum + item.minutes, 0)),
+                    difficulty: "Easy",
+                    focus: false,
+                    reason: "Round out the session with low-pressure reading and rhythm accuracy.",
+                    notes: "Sight reading: keep going, count steadily, no stopping."
+                });
+            }
+
+            return plan.filter(item => item.minutes > 0);
+        }
+
+        function renderPracticePlan() {
+            const container = document.getElementById('practicePlan');
+            if (!container) return;
+            if (!userSettings.smartPlan) {
+                container.innerHTML = '';
+                generatedPracticePlan = [];
+                return;
+            }
+
+            generatedPracticePlan = buildPracticePlan();
+            const totalMinutes = generatedPracticePlan.reduce((sum, item) => sum + item.minutes, 0);
+            const planItems = generatedPracticePlan.map((item, index) => `
+                <div class="practice-plan-item">
+                    <div class="plan-minutes">${item.minutes}m</div>
+                    <div>
+                        <div class="plan-label">${escapeHTML(item.pieceName)}</div>
+                        <div class="plan-reason">${escapeHTML(item.reason)}</div>
+                    </div>
+                    <button class="plan-use-btn" data-plan-index="${index}">Use</button>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="practice-plan-card">
+                    <div class="practice-plan-header">
+                        <div>
+                            <div class="practice-plan-title">Today's Practice Plan</div>
+                            <div class="practice-plan-subtitle">Balanced for warmup, focused work, and retention.</div>
+                        </div>
+                        <div class="practice-plan-total">${totalMinutes}m</div>
+                    </div>
+                    <div class="practice-plan-list">${planItems}</div>
+                </div>
+            `;
+
+            container.querySelectorAll('.plan-use-btn').forEach(button => {
+                button.addEventListener('click', () => usePracticePlanItem(parseInt(button.dataset.planIndex)));
+            });
+        }
+
+        function usePracticePlanItem(index) {
+            const item = generatedPracticePlan[index];
+            if (!item) return;
+
+            document.getElementById('pieceName').value = item.pieceName;
+            document.getElementById('practiceMinutes').value = item.minutes;
+            document.getElementById('entryDifficulty').value = item.difficulty;
+            document.getElementById('entryFocus').checked = item.focus;
+            document.getElementById('entryNotes').value = item.notes;
+            document.getElementById('pieceName').focus();
+        }
+
+        function renderCustomPracticePlan() {
+            const container = document.getElementById('customPracticePlan');
+            if (!container) return;
+            if (!userSettings.customPlan) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const planItems = customPracticePlan.length ? customPracticePlan.map((item, index) => `
+                <div class="practice-plan-item">
+                    <div class="plan-minutes">${item.minutes}m</div>
+                    <div>
+                        <div class="plan-label">${escapeHTML(item.pieceName)}</div>
+                        <div class="plan-reason">${escapeHTML(item.notes || 'Custom practice block')}</div>
+                    </div>
+                    <div class="plan-actions">
+                        <button class="plan-use-btn" data-custom-index="${index}">Use</button>
+                        <button class="plan-delete-btn" data-delete-custom-index="${index}">Delete</button>
+                    </div>
+                </div>
+            `).join('') : '<div class="custom-plan-empty">Build your own plan blocks here, then tap Use when you are ready to practice one.</div>';
+
+            container.innerHTML = `
+                <div class="practice-plan-card">
+                    <div class="practice-plan-header">
+                        <div>
+                            <div class="practice-plan-title">My Practice Plan</div>
+                            <div class="practice-plan-subtitle">Create the exact blocks you want for today.</div>
+                        </div>
+                    </div>
+                    <div class="custom-plan-form">
+                        <input type="text" id="customPlanPiece" placeholder="Piece or focus area">
+                        <input type="number" id="customPlanMinutes" placeholder="Mins" min="1">
+                        <input type="text" id="customPlanNotes" class="custom-plan-note" placeholder="Notes, section, or goal">
+                    </div>
+                    <button class="btn-add" onclick="addCustomPlanItem()" style="width: 100%; margin-bottom: 12px;">Add Block</button>
+                    <div class="practice-plan-list">${planItems}</div>
+                </div>
+            `;
+
+            container.querySelectorAll('[data-custom-index]').forEach(button => {
+                button.addEventListener('click', () => useCustomPlanItem(parseInt(button.dataset.customIndex)));
+            });
+            container.querySelectorAll('[data-delete-custom-index]').forEach(button => {
+                button.addEventListener('click', () => deleteCustomPlanItem(parseInt(button.dataset.deleteCustomIndex)));
+            });
+        }
+
+        function addCustomPlanItem() {
+            const pieceInput = document.getElementById('customPlanPiece');
+            const minutesInput = document.getElementById('customPlanMinutes');
+            const notesInput = document.getElementById('customPlanNotes');
+            const pieceName = pieceInput.value.trim();
+            const minutes = parseInt(minutesInput.value);
+            const notes = notesInput.value.trim();
+
+            if (!pieceName || isNaN(minutes) || minutes <= 0) {
+                showInAppModal("Plan Block Needed", "Add a piece or focus area and valid minutes first.");
+                return;
+            }
+
+            customPracticePlan.push({
+                id: Date.now(),
+                pieceName,
+                minutes,
+                notes
+            });
+            saveCustomPracticePlan();
+            renderCustomPracticePlan();
+        }
+
+        function useCustomPlanItem(index) {
+            const item = customPracticePlan[index];
+            if (!item) return;
+
+            document.getElementById('pieceName').value = item.pieceName;
+            document.getElementById('practiceMinutes').value = item.minutes;
+            document.getElementById('entryDifficulty').value = "Medium";
+            document.getElementById('entryFocus').checked = true;
+            document.getElementById('entryNotes').value = item.notes || "Custom practice plan block.";
+            document.getElementById('pieceName').focus();
+        }
+
+        function deleteCustomPlanItem(index) {
+            customPracticePlan.splice(index, 1);
+            saveCustomPracticePlan();
+            renderCustomPracticePlan();
         }
 
         // 7. Render Dashboard Stats
@@ -2200,9 +2902,9 @@
             const todayStr = getTodayDateString();
 
             sessions.forEach(session => {
-                totalOverall += session.minutes;
+                totalOverall += getSessionMinutes(session);
                 if (session.date === todayStr) {
-                    totalToday += session.minutes;
+                    totalToday += getSessionMinutes(session);
                 }
             });
 
@@ -2229,7 +2931,7 @@
         // Helper: Calculate Practice Streak
         function calculateStreak() {
             // Get all unique dates practiced, sorted from newest to oldest
-            const uniqueDates = [...new Set(sessions.map(s => s.date))].sort().reverse();
+            const uniqueDates = getUniquePracticeDates().reverse();
             if (uniqueDates.length === 0) return 0;
 
             let streak = 0;
@@ -2316,42 +3018,52 @@
             }
 
             filteredSessions.forEach(session => {
+                const safeSessionId = Number(session.id);
+                if (!Number.isFinite(safeSessionId)) return;
                 const card = document.createElement('div');
                 card.className = `session-card ${session.isFocus ? 'focus-session' : ''}`;
                 
                 // Difficulty tag styling color class
-                const diffClass = `tag-${session.difficulty.toLowerCase()}`;
+                const difficultyValue = ["Easy", "Medium", "Hard"].includes(session.difficulty) ? session.difficulty : "Medium";
+                const diffClass = `tag-${difficultyValue.toLowerCase()}`;
+                const safePieceName = escapeHTML(session.pieceName);
+                const safeInstrument = escapeHTML(session.instrument || 'Piano');
+                const safeDate = escapeHTML(session.date);
+                const safeDifficulty = escapeHTML(difficultyValue);
+                const safeNotes = escapeHTML(session.notes);
+                const safeAiTier = session.aiReview ? escapeHTML(session.aiReview.tier) : '';
+                const safeAiInsight = session.aiReview ? escapeHTML(session.aiReview.insight) : '';
 
                 // Generate the visual stars based on rating
                 const rating = session.rating || 3;
                 const starsDisplay = '★'.repeat(rating) + '☆'.repeat(5 - rating);
 
                 card.innerHTML = `
-                    <div class="session-summary" onclick="toggleSessionDetails(${session.id})">
+                    <div class="session-summary" onclick="toggleSessionDetails(${safeSessionId})">
                         <div class="session-header">
-                            <div class="session-title">${session.isFocus ? '⭐ ' : ''}${session.pieceName}</div>
-                            <span class="difficulty-tag ${diffClass}">${session.difficulty}</span>
+                            <div class="session-title">${session.isFocus ? '⭐ ' : ''}${safePieceName}</div>
+                            <span class="difficulty-tag ${diffClass}">${safeDifficulty}</span>
                         </div>
                         <div class="session-meta">
-                            🎵 ${session.instrument || 'Piano'} | 📅 ${session.date} | ⏱️ ${session.minutes} mins 
+                            🎵 ${safeInstrument} | 📅 ${safeDate} | ⏱️ ${session.minutes} mins 
                             | <span style="color: #f59e0b; font-size: 1.05em; letter-spacing: 2px;">${starsDisplay}</span>
                         </div>
-                        <div class="expand-indicator" id="indicator-${session.id}">▼ Tap for details</div>
+                        <div class="expand-indicator" id="indicator-${safeSessionId}">▼ Tap for details</div>
                     </div>
-                    <div class="session-details" id="details-${session.id}">
+                    <div class="session-details" id="details-${safeSessionId}">
                         ${session.aiReview ? `
                             <div class="session-ai-review">
                                 <div style="font-weight: 800; font-size: 0.75rem; color: #3b82f6; margin-bottom: 4px; display: flex; justify-content: space-between;">
                                     <span>🤖 AI INSIGHTS</span>
-                                    <span style="background:#3b82f6; color:white; padding: 1px 6px; border-radius: 4px; font-size: 0.6rem;">${session.aiReview.tier}</span>
+                                    <span style="background:#3b82f6; color:white; padding: 1px 6px; border-radius: 4px; font-size: 0.6rem;">${safeAiTier}</span>
                                 </div>
                                 <div style="font-size: 0.85rem; line-height: 1.4; color: inherit;">
-                                    <strong>${session.aiReview.ratio}%</strong> musicality detected. ${session.aiReview.insight}
+                                    <strong>${session.aiReview.ratio}%</strong> musicality detected. ${safeAiInsight}
                                 </div>
                             </div>
                         ` : ''}
-                        ${session.notes ? `<div class="session-notes"><strong>Notes:</strong><br>${session.notes}</div>` : '<div class="session-notes" style="color: #94a3b8; font-style: italic;">No notes provided.</div>'}
-                        <button class="btn-delete" onclick="deleteSession(${session.id})">Delete</button>
+                        ${session.notes ? `<div class="session-notes"><strong>Notes:</strong><br>${safeNotes}</div>` : '<div class="session-notes" style="color: #94a3b8; font-style: italic;">No notes provided.</div>'}
+                        <button class="btn-delete" onclick="deleteSession(${safeSessionId})">Delete</button>
                     </div>
                 `;
                 logElement.appendChild(card);
@@ -2386,16 +3098,33 @@
             
             document.getElementById(`view-${tabId}`).classList.add('active');
             document.getElementById(`btn-tab-${tabId}`).classList.add('active');
+            if (tabId === 'settings') syncSettingsControls();
+            if (tabId === 'summary') renderAchievements();
         }
 
         // 13. Metronome Logic
-        let audioCtx = null;
-        let metroInterval = null;
-        let isMetroRunning = false;
-        let currentBpm = 120;
-        let nextNoteTime = 0.0;
-        let scheduleAheadTime = 0.1;
-        let isLeft = true;
+        async function ensureMetronomeAudio() {
+            if (!window.AudioContext && !window.webkitAudioContext) {
+                showInAppModal("Metronome Error", "Your browser does not support Web Audio.");
+                return false;
+            }
+
+            if (!audioCtx || audioCtx.state === 'closed') {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            if (audioCtx.state === 'suspended') {
+                try {
+                    await audioCtx.resume();
+                } catch (err) {
+                    console.error(err);
+                    showInAppModal("Metronome Blocked", "Tap Start again and make sure browser sound is enabled.");
+                    return false;
+                }
+            }
+
+            return audioCtx.state === 'running';
+        }
 
         function playClick(time) {
             if(!audioCtx) return;
@@ -2404,16 +3133,18 @@
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             
-            osc.frequency.value = 800; // high tick
-            gain.gain.setValueAtTime(1, time);
-            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+            osc.type = 'square';
+            osc.frequency.value = 900; // high tick
+            gain.gain.setValueAtTime(0.0001, time);
+            gain.gain.linearRampToValueAtTime(0.45, time + 0.004);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
             
             osc.start(time);
-            osc.stop(time + 0.1);
+            osc.stop(time + 0.08);
 
             // Visual metronome synchronization
             const timeToBeat = (time - audioCtx.currentTime) * 1000;
-            setTimeout(() => {
+            beatFlashTimeout = setTimeout(() => {
             if (!isMetroRunning) return; // Prevent movement if stopped while scheduled
             
                 const arm = document.getElementById('pendulumArm');
@@ -2446,6 +3177,7 @@
         }
 
         function scheduler() {
+            if (!isMetroRunning || !audioCtx || audioCtx.state !== 'running') return;
             while (nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
                 playClick(nextNoteTime);
                 nextNote();
@@ -2453,15 +3185,15 @@
             metroInterval = setTimeout(scheduler, 25.0);
         }
 
-        function toggleMetronome() {
-            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
+        async function toggleMetronome(event) {
+            if (event) event.preventDefault();
             const btn = document.getElementById('metroBtn');
             const arm = document.getElementById('pendulumArm');
             const navBtn = document.getElementById('btn-tab-metronome');
 
             if(isMetroRunning) {
                 clearTimeout(metroInterval);
+                clearTimeout(beatFlashTimeout);
                 isMetroRunning = false;
                 navBtn.classList.remove('metro-pulse');
                 const navIcon = navBtn.querySelector('.nav-icon');
@@ -2477,11 +3209,22 @@
                     arm.style.transform = 'rotate(0deg)';
                 }
             } else {
-                if(audioCtx.state === 'suspended') audioCtx.resume();
+                btn.innerText = "Starting...";
+                btn.disabled = true;
+                const audioReady = await ensureMetronomeAudio();
+                btn.disabled = false;
+
+                if (!audioReady) {
+                    btn.innerText = "Start Metronome";
+                    return;
+                }
+
+                clearTimeout(metroInterval);
+                clearTimeout(beatFlashTimeout);
                 isMetroRunning = true;
                 navBtn.classList.add('metro-pulse');
                 isLeft = true;
-                nextNoteTime = audioCtx.currentTime + 0.05;
+                nextNoteTime = audioCtx.currentTime + 0.02;
                 scheduler();
                 btn.innerText = "Stop Metronome";
                 btn.classList.remove('btn-metro');
@@ -2590,23 +3333,48 @@
         }
 
         function renderAchievements() {
+            const container = document.getElementById('achievementsList');
+            if (!container) return;
+            if (!userSettings.achievements) {
+                container.innerHTML = `
+                    <div class="feature-disabled-panel">
+                        Achievements are turned off in Settings.
+                        <button class="btn-add" type="button" onclick="enableFeature('achievements')">Turn On Achievements</button>
+                    </div>
+                `;
+                return;
+            }
             const streak = calculateStreak();
-            let totalOverall = sessions.reduce((sum, s) => sum + s.minutes, 0);
+            const totalOverall = sessions.reduce((sum, s) => sum + getSessionMinutes(s), 0);
+            const totalToday = sessions
+                .filter(s => s.date === getTodayDateString())
+                .reduce((sum, s) => sum + getSessionMinutes(s), 0);
+            const uniquePieces = new Set(sessions.map(s => s.pieceName).filter(Boolean)).size;
+            const uniquePracticeDays = getUniquePracticeDates().length;
+            const focusSessions = sessions.filter(s => s.isFocus).length;
+            const dailyGoal = userSettings.dailyGoal || 30;
             
             const achievements = [
-                { id: 'first', name: 'First Note', desc: 'Log your first practice', icon: '🎵', condition: sessions.length > 0 },
-                { id: 'streak3', name: 'Consistent', desc: '3 Day Practice Streak', icon: '🔥', condition: streak >= 3 },
-                { id: 'streak7', name: 'Dedicated', desc: '7 Day Practice Streak', icon: '📅', condition: streak >= 7 },
-                { id: 'hours10', name: 'Maestro', desc: '10+ Hours Total Practice', icon: '🏆', condition: totalOverall >= 600 }
+                { id: 'first', name: 'First Note', desc: 'Log your first practice', icon: '🎵', condition: sessions.length > 0, progress: `${Math.min(sessions.length, 1)}/1 session` },
+                { id: 'goal', name: 'Goal Getter', desc: 'Hit your daily goal', icon: '🎯', condition: totalToday >= dailyGoal, progress: `${Math.min(totalToday, dailyGoal)}/${dailyGoal}m today` },
+                { id: 'streak3', name: 'Consistent', desc: '3 day practice streak', icon: '🔥', condition: streak >= 3, progress: `${Math.min(streak, 3)}/3 day streak` },
+                { id: 'streak7', name: 'Dedicated', desc: '7 day practice streak', icon: '📅', condition: streak >= 7, progress: `${Math.min(streak, 7)}/7 day streak` },
+                { id: 'pieces3', name: 'Repertoire', desc: 'Practice 3 different pieces', icon: '🎼', condition: uniquePieces >= 3, progress: `${Math.min(uniquePieces, 3)}/3 pieces` },
+                { id: 'focus5', name: 'Deep Work', desc: 'Log 5 focus-piece sessions', icon: '⭐', condition: focusSessions >= 5, progress: `${Math.min(focusSessions, 5)}/5 focus sessions` },
+                { id: 'days10', name: 'Habit Builder', desc: 'Practice on 10 different days', icon: '🗓️', condition: uniquePracticeDays >= 10, progress: `${Math.min(uniquePracticeDays, 10)}/10 practice days` },
+                { id: 'hours10', name: 'Maestro', desc: '10+ hours total practice', icon: '🏆', condition: totalOverall >= 600, progress: `${Math.min(Math.floor(totalOverall / 60), 10)}/10 hours` }
             ];
 
-            const container = document.getElementById('achievementsList');
-            if(!container) return;
             container.innerHTML = '';
             achievements.forEach(a => {
                 const badge = document.createElement('div');
                 badge.className = `badge ${a.condition ? 'unlocked' : ''}`;
-                badge.innerHTML = `<div class="badge-icon">${a.icon}</div><div>${a.name}</div>`;
+                badge.innerHTML = `
+                    <div class="badge-icon">${a.icon}</div>
+                    <div>${a.name}</div>
+                    <div class="badge-progress">${a.progress}</div>
+                    <div class="badge-state">${a.condition ? 'Unlocked' : 'Locked'}</div>
+                `;
                 badge.title = a.desc;
                 container.appendChild(badge);
             });
@@ -2617,6 +3385,12 @@
             const weeklyChart = document.getElementById('weeklyChart');
             if(!weeklyChart) return;
             weeklyChart.innerHTML = '';
+            const pieceChart = document.getElementById('pieceChart');
+            if (!userSettings.charts) {
+                weeklyChart.innerHTML = '<div class="empty-message">Charts are turned off in Settings.</div>';
+                if (pieceChart) pieceChart.innerHTML = '<div class="empty-message">Charts are turned off in Settings.</div>';
+                return;
+            }
             
             let last7Days = [];
             for(let i=6; i>=0; i--) {
@@ -2648,7 +3422,6 @@
             });
 
             // Piece Chart
-            const pieceChart = document.getElementById('pieceChart');
             if(!pieceChart) return;
             pieceChart.innerHTML = '';
             
@@ -2666,11 +3439,13 @@
             piecesArray.forEach(p => {
                 let h = Math.max(5, (p.mins / maxPieceMins) * 70);
                 let shortName = p.name.length > 8 ? p.name.substring(0,8)+'..' : p.name;
+                const safeName = escapeHTML(p.name);
+                const safeShortName = escapeHTML(shortName);
                 pieceChart.innerHTML += `
                     <div class="chart-bar-wrapper">
                         <div class="chart-val">${p.mins}m</div>
                         <div class="chart-bar" style="height: ${h}%; background: linear-gradient(to top, #10b981, #34d399);"></div>
-                        <div class="chart-label" title="${p.name}">${shortName}</div>
+                        <div class="chart-label" title="${safeName}">${safeShortName}</div>
                     </div>
                 `;
             });
@@ -2680,6 +3455,7 @@
             const container = document.getElementById('recommendations');
             if (!container) return;
             container.innerHTML = '';
+            if (!userSettings.recommendations) return;
             
             if (sessions.length === 0) return;
 
@@ -2710,11 +3486,13 @@
             recs.sort((a, b) => b.days - a.days).slice(0, 2).forEach(rec => {
                 const card = document.createElement('div');
                 card.className = 'recommendation-card';
+                const safeName = escapeHTML(rec.name);
                 card.innerHTML = `
                     <div class="rec-icon">💡</div>
-                    <div class="rec-text">It's been <strong>${rec.days} days</strong> since you practiced <strong>${rec.name}</strong>. Ready to dive back in?</div>
-                    <button class="rec-btn" onclick="fillPracticePiece('${rec.name.replace(/'/g, "\\'")}')">Let's go</button>
+                    <div class="rec-text">It's been <strong>${rec.days} days</strong> since you practiced <strong>${safeName}</strong>. Ready to dive back in?</div>
+                    <button class="rec-btn" type="button">Let's go</button>
                 `;
+                card.querySelector('.rec-btn').addEventListener('click', () => fillPracticePiece(rec.name));
                 container.appendChild(card);
             });
         }
@@ -2727,29 +3505,35 @@
         // Pitch Detection Helpers for "Musical Note" Analysis
         const noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
         function autoCorrelate(buf, sampleRate) {
-            let SIZE = buf.length;
+            const SIZE = buf.length;
             let rms = 0;
             for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
             rms = Math.sqrt(rms / SIZE);
-            if (rms < 0.01) return -1;
+            if (rms < 0.008) return -1;
 
-            let r1 = 0, r2 = SIZE - 1, thres = 0.2;
-            for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
-            for (let i = 1; i < SIZE / 2; i++) if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
-            buf = buf.slice(r1, r2);
-            SIZE = buf.length;
+            const minFrequency = 45;
+            const maxFrequency = 4200;
+            const minOffset = Math.max(2, Math.floor(sampleRate / maxFrequency));
+            const maxOffset = Math.min(SIZE - 2, Math.ceil(sampleRate / minFrequency));
+            let bestOffset = -1;
+            let bestCorrelation = 0;
 
-            let c = new Float32Array(SIZE);
-            for (let i = 0; i < SIZE; i++)
-                for (let j = 0; j < SIZE - i; j++)
-                    c[i] = c[i] + buf[j] * buf[j + i];
-
-            let d = 0; while (c[d] > c[d + 1]) d++;
-            let maxval = -1, maxpos = -1;
-            for (let i = d; i < SIZE; i++) {
-                if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+            for (let offset = minOffset; offset <= maxOffset; offset++) {
+                let correlation = 0;
+                let sampleCount = 0;
+                for (let i = 0; i < SIZE - offset; i += 2) {
+                    correlation += 1 - Math.abs(buf[i] - buf[i + offset]);
+                    sampleCount++;
+                }
+                correlation = correlation / sampleCount;
+                if (correlation > bestCorrelation) {
+                    bestCorrelation = correlation;
+                    bestOffset = offset;
+                }
             }
-            return sampleRate / maxpos;
+
+            if (bestCorrelation < 0.88 || bestOffset <= 0) return -1;
+            return sampleRate / bestOffset;
         }
 
         // 15. Microphone Auto-Rate Logic
@@ -2758,8 +3542,13 @@
         let audioContextMic = null;
         let analyserMic = null;
         let micDataArray = null;
+        let micFrequencyArray = null;
         let micAnimFrame = null;
         let activityScores = [];
+        let micAnalysisStartedAt = null;
+        let micNoiseFloor = 0.012;
+        let lastMusicalHitAt = 0;
+        let lastDetectedNote = "";
 
         async function startMicAnalysis() {
             const status = document.getElementById('micStatus');
@@ -2768,55 +3557,113 @@
 
             try {
                 // Request microphone access
-                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                micStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false
+                    }
+                });
                 audioContextMic = new (window.AudioContext || window.webkitAudioContext)();
                 analyserMic = audioContextMic.createAnalyser();
                 const source = audioContextMic.createMediaStreamSource(micStream);
                 source.connect(analyserMic);
 
-                analyserMic.fftSize = 2048;
+                analyserMic.fftSize = 4096;
+                analyserMic.smoothingTimeConstant = 0.82;
                 const bufferLength = analyserMic.fftSize;
                 micDataArray = new Float32Array(bufferLength);
+                micFrequencyArray = new Uint8Array(analyserMic.frequencyBinCount);
 
                 isMicListening = true;
                 activityScores = [];
+                micAnalysisStartedAt = Date.now();
+                micNoiseFloor = 0.012;
+                lastMusicalHitAt = 0;
+                lastDetectedNote = "";
                 
                 status.style.display = "block";
                 feedback.style.display = "none";
-                status.innerText = "Listening... Play your piece!";
+                status.innerText = "Listening... play a few notes so I can calibrate.";
                 vis.style.display = "block";
 
                 checkAudioLevel();
             } catch (err) {
+                isMicListening = false;
+                document.getElementById('micToggleSwitch').checked = false;
                 showInAppModal("Mic Access Error", "Could not access microphone. Please ensure permissions are granted in your browser settings.");
                 console.error(err);
             }
         }
 
+        function getMicMetrics() {
+            analyserMic.getFloatTimeDomainData(micDataArray);
+            analyserMic.getByteFrequencyData(micFrequencyArray);
+
+            let sumSquares = 0;
+            let peak = 0;
+            for (let i = 0; i < micDataArray.length; i++) {
+                const sample = micDataArray[i];
+                sumSquares += sample * sample;
+                peak = Math.max(peak, Math.abs(sample));
+            }
+            const rms = Math.sqrt(sumSquares / micDataArray.length);
+
+            if (rms < micNoiseFloor * 1.4) {
+                micNoiseFloor = (micNoiseFloor * 0.96) + (rms * 0.04);
+            }
+
+            let frequencyEnergy = 0;
+            let weightedFrequency = 0;
+            const nyquist = audioContextMic.sampleRate / 2;
+            for (let i = 1; i < micFrequencyArray.length; i++) {
+                const frequency = (i / micFrequencyArray.length) * nyquist;
+                if (frequency < 55 || frequency > 4200) continue;
+                const energy = micFrequencyArray[i] / 255;
+                frequencyEnergy += energy;
+                weightedFrequency += energy * frequency;
+            }
+            const centroid = frequencyEnergy > 0 ? weightedFrequency / frequencyEnergy : 0;
+            const pitch = autoCorrelate(micDataArray, audioContextMic.sampleRate);
+            const hasPitch = pitch !== -1 && pitch > 45 && pitch < 4200;
+            const hasPianoEnergy = rms > Math.max(0.018, micNoiseFloor * 2.4) && centroid > 80 && centroid < 2600;
+            const hasAttack = peak > Math.max(0.08, micNoiseFloor * 5);
+
+            return { rms, peak, pitch, hasPitch, hasPianoEnergy, hasAttack };
+        }
+
         function checkAudioLevel() {
             if (!isMicListening) return;
             
-            analyserMic.getFloatTimeDomainData(micDataArray);
-            const pitch = autoCorrelate(micDataArray, audioContextMic.sampleRate);
+            const metrics = getMicMetrics();
             const status = document.getElementById('micStatus');
             const bar = document.getElementById('micLevel');
+            const now = Date.now();
 
-            let isNoteDetected = false;
-            // Tonal detection: check if pitch is in musical range (approx 50Hz to 4000Hz)
-            if (pitch !== -1 && pitch > 50 && pitch < 4000) {
-                const noteNum = Math.round(12 * (Math.log(pitch / 440) / Math.log(2))) + 69;
-                const noteName = noteStrings[noteNum % 12];
-                status.innerText = `Listening... Detected: ${noteName}`;
-                bar.style.width = '100%';
-                bar.style.background = '#3b82f6';
-                isNoteDetected = true;
-            } else {
-                bar.style.width = '10%';
-                bar.style.background = '#94a3b8';
+            let isMusicalActivity = false;
+            if (metrics.hasPitch) {
+                const noteNum = Math.round(12 * (Math.log(metrics.pitch / 440) / Math.log(2))) + 69;
+                const noteName = noteStrings[((noteNum % 12) + 12) % 12];
+                lastDetectedNote = noteName;
+                lastMusicalHitAt = now;
+                isMusicalActivity = true;
+            } else if (metrics.hasPianoEnergy || metrics.hasAttack || now - lastMusicalHitAt < 450) {
+                isMusicalActivity = true;
             }
 
-            // Record musical activity (1 for clear note, 0 for noise/silence)
-            activityScores.push(isNoteDetected ? 1 : 0);
+            const level = Math.min(100, Math.max(8, Math.round((metrics.rms / 0.09) * 100)));
+            bar.style.width = `${level}%`;
+            bar.style.background = isMusicalActivity ? '#3b82f6' : '#94a3b8';
+            status.innerText = lastDetectedNote && now - lastMusicalHitAt < 1200
+                ? `Listening... detected ${lastDetectedNote}`
+                : "Listening... tracking tone and rhythm.";
+
+            activityScores.push({
+                active: isMusicalActivity ? 1 : 0,
+                pitched: metrics.hasPitch ? 1 : 0,
+                rms: metrics.rms,
+                time: now
+            });
 
             micAnimFrame = requestAnimationFrame(checkAudioLevel);
         }
@@ -2837,23 +3684,30 @@
             const vis = document.getElementById('micVisualizer');
 
             vis.style.display = "none";
+            micStream = null;
+            audioContextMic = null;
+            analyserMic = null;
 
-            // Calculate rating based on the overall average volume of sound
-            if (activityScores.length < 50) { // roughly 1 second
+            const analysisSeconds = micAnalysisStartedAt ? (Date.now() - micAnalysisStartedAt) / 1000 : 0;
+            if (activityScores.length < 8 || analysisSeconds < 0.75) {
                 status.innerText = "Listening too short to rate.";
                 setTimeout(() => status.style.display = "none", 3000);
+                if (elapsedSeconds !== null) {
+                    document.getElementById('practiceMinutes').value = elapsedSeconds > 0 ? Math.max(1, Math.ceil(elapsedSeconds / 60)) : "";
+                }
                 return;
             }
 
-            // Calculate percentage of time music was actually detected
-            const activeFrames = activityScores.reduce((a, b) => a + b, 0);
+            const activeFrames = activityScores.reduce((sum, sample) => sum + sample.active, 0);
+            const pitchedFrames = activityScores.reduce((sum, sample) => sum + sample.pitched, 0);
+            const averageRms = activityScores.reduce((sum, sample) => sum + sample.rms, 0) / activityScores.length;
             const activityRatio = activeFrames / activityScores.length;
+            const pitchRatio = pitchedFrames / activityScores.length;
 
             // If we have elapsed time from a timer, calculate the "Actual Played" minutes
             if (elapsedSeconds !== null) {
                 const actualPlayedSeconds = elapsedSeconds * activityRatio;
-                // Ensure at least 1 minute is logged if any playing happened, otherwise 0
-                const finalMins = activityRatio > 0.05 ? Math.max(1, Math.ceil(actualPlayedSeconds / 60)) : 0;
+                const finalMins = activityRatio > 0.04 ? Math.max(1, Math.ceil(actualPlayedSeconds / 60)) : Math.max(1, Math.ceil(elapsedSeconds / 60));
                 document.getElementById('practiceMinutes').value = finalMins;
             }
 
@@ -2861,15 +3715,16 @@
             let insight = "";
             let tier = "Getting Started";
 
-            if (activityRatio > 0.7) { calculatedRating = 5; tier = "Virtuoso Performance"; insight = "Incredible focus! You maintained musicality throughout almost the entire session."; }
-            else if (activityRatio > 0.5) { calculatedRating = 4; tier = "Maestro"; insight = "Strong performance. Your playing was very consistent and clear."; }
-            else if (activityRatio > 0.3) { calculatedRating = 3; tier = "Solid Progress"; insight = "Good practice. You're hitting a nice rhythm, keep it up!"; }
-            else if (activityRatio > 0.1) { calculatedRating = 2; tier = "Keep Going"; insight = "You're making sound! Try to minimize pauses to increase your flow."; }
-            else { insight = "Analysis complete. Make sure your microphone is close to your instrument for better detection."; }
+            if (activityRatio > 0.75 && pitchRatio > 0.18) { calculatedRating = 5; tier = "Virtuoso Performance"; insight = "Excellent continuity and clear tone. Your playing stayed active with strong note definition."; }
+            else if (activityRatio > 0.55) { calculatedRating = 4; tier = "Focused Flow"; insight = "Strong session. I heard steady musical activity with healthy pauses for resets."; }
+            else if (activityRatio > 0.32) { calculatedRating = 3; tier = "Solid Progress"; insight = "Good work. There was a useful mix of playing and stopping to fix details."; }
+            else if (activityRatio > 0.12 || averageRms > micNoiseFloor * 1.8) { calculatedRating = 2; tier = "Keep Going"; insight = "I heard some playing. Try placing the device closer to the piano or using a quieter room for better analysis."; }
+            else { insight = "I did not hear enough clear piano sound. Move the microphone closer and play a few strong notes before starting."; }
             
             // Save the data so it can be picked up by saveSession()
             lastAiReview = {
                 ratio: Math.round(activityRatio * 100),
+                pitchRatio: Math.round(pitchRatio * 100),
                 tier: tier,
                 insight: insight
             };
@@ -2885,7 +3740,7 @@
                     <span style="font-size: 0.7rem; background: #3b82f6; color: white; padding: 2px 8px; border-radius: 20px;">${tier}</span>
                 </div>
                 <div style="line-height: 1.4;">
-                    <strong>${Math.round(activityRatio * 100)}%</strong> of your session contained clear musical notes.<br>
+                    <strong>${Math.round(activityRatio * 100)}%</strong> active playing detected · <strong>${Math.round(pitchRatio * 100)}%</strong> clear pitch lock.<br>
                     <span style="font-style: italic; opacity: 0.9;">"${insight}"</span>
                 </div>
             `;
