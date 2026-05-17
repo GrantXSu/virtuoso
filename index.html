@@ -1,0 +1,3753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <title>Virtuoso - Practice Tracker</title>
+    <style>
+        /* CSS: This section styles our web app to look clean and modern */
+        
+        /* Basic reset and font setup */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Center the app on the screen with a light background */
+        body {
+            background-color: #cbd5e1;
+            display: flex;
+            justify-content: center;
+            height: 100dvh;
+            color: #333;
+            overflow: hidden; /* Prevents "pull-to-refresh" rubber banding */
+            -webkit-user-select: none; /* Disables text selection across the app */
+            user-select: none;
+        }
+
+        /* The main white card container */
+        .app-container {
+            background: linear-gradient(-45deg, #f8fafc, #e0e7ff, #fae8ff, #f1f5f9);
+            background-size: 400% 400%;
+            animation: appBg 15s ease infinite;
+            width: 100%;
+            max-width: 450px;
+            height: 100%;
+            display: flex;
+        position: relative;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        @keyframes appBg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @media (min-width: 451px) {
+            .app-container {
+                border-radius: 24px;
+                max-height: 95vh;
+                margin: auto;
+                overflow: hidden;
+            }
+        }
+
+        /* Floating Music Symbols Background */
+        .floating-symbols {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .symbol {
+            position: absolute;
+            color: rgba(99, 102, 241, 0.4); 
+            font-size: 3rem;
+            user-select: none;
+            animation: floatUp 15s linear infinite;
+            bottom: -100px;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(-15deg) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            25% { transform: translateY(-300px) rotate(0deg) translateX(25px); }
+            50% { transform: translateY(-600px) rotate(15deg) translateX(-25px); }
+            75% { transform: translateY(-900px) rotate(0deg) translateX(25px); }
+            90% { opacity: 1; }
+            100% { transform: translateY(-1200px) rotate(-15deg) translateX(0); opacity: 0; }
+        }
+
+        /* Using negative animation-delays so they are already on-screen when the app opens */
+        .symbol:nth-child(1) { left: 5%; animation-duration: 12s; animation-delay: -2s; font-size: 4rem; }
+        .symbol:nth-child(2) { left: 25%; animation-duration: 9s; animation-delay: -7s; font-size: 2.5rem; color: rgba(236, 72, 153, 0.25); }
+        .symbol:nth-child(3) { left: 55%; animation-duration: 14s; animation-delay: -4s; font-size: 5rem; }
+        .symbol:nth-child(4) { left: 80%; animation-duration: 11s; animation-delay: -9s; font-size: 3.5rem; color: rgba(139, 92, 246, 0.25); }
+        .symbol:nth-child(5) { left: 35%; animation-duration: 13s; animation-delay: -1s; font-size: 4.5rem; }
+        .symbol:nth-child(6) { left: 70%; animation-duration: 10s; animation-delay: -6s; font-size: 3rem; color: rgba(236, 72, 153, 0.25); }
+        .symbol:nth-child(7) { left: 15%; animation-duration: 15s; animation-delay: -11s; font-size: 4rem; color: rgba(139, 92, 246, 0.25); }
+        .symbol:nth-child(8) { left: 85%; animation-duration: 8s; animation-delay: -3s; font-size: 2.8rem; }
+        .symbol:nth-child(9) { left: 10%; animation-duration: 10s; animation-delay: -8s; font-size: 3.2rem; color: rgba(236, 72, 153, 0.25); }
+        .symbol:nth-child(10) { left: 45%; animation-duration: 12s; animation-delay: -5s; font-size: 4.2rem; }
+        .symbol:nth-child(11) { left: 60%; animation-duration: 9s; animation-delay: -10s; font-size: 2.6rem; color: rgba(139, 92, 246, 0.25); }
+        .symbol:nth-child(12) { left: 90%; animation-duration: 14s; animation-delay: -2s; font-size: 3.8rem; }
+
+        /* App Layout Sections */
+        .app-header {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            padding: max(30px, env(safe-area-inset-top)) 25px 25px 25px;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+            z-index: 10;
+            color: white;
+            position: relative;
+        }
+
+        .header-title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .mini-logo {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 6px;
+            display: flex;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .header-title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 0;
+        }
+
+        /* Stats Dashboard Styling */
+        .dashboard {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 18px;
+        }
+
+        .stat-box {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-box span {
+            display: block;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-box strong {
+            font-size: 1.35rem;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-divider {
+            width: 1px;
+            background-color: rgba(255, 255, 255, 0.2);
+            margin: 0 10px;
+        }
+
+        .app-main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px 20px;
+            background-color: transparent;
+            position: relative;
+            z-index: 1; /* Keeps content above the floating symbols */
+        }
+
+        /* Form and Card Styling */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            margin-bottom: 25px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-section {
+            background-color: rgba(255, 255, 255, 0.5);
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+
+        .form-section-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            flex: 1;
+            margin-bottom: 15px;
+        }
+
+        .input-group.full-width {
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            background-color: #f1f5f9;
+            transition: all 0.3s ease;
+            -webkit-user-select: text; /* Re-enables text selection for inputs only */
+            user-select: text;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        select:focus,
+        textarea:focus {
+            background-color: #ffffff;
+            border-color: #818cf8;
+            box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.15);
+        }
+
+        /* Autocomplete Dropdown (Google-style) */
+        .popular-pieces-container {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border: 1px solid #d9e2ec;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 20;
+            flex-direction: column;
+        }
+        .popular-piece-item {
+            padding: 10px 12px;
+            font-size: 0.95rem;
+            color: #334155;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .popular-piece-item:last-child {
+            border-bottom: none;
+        }
+        .popular-piece-item:hover {
+            background-color: #f8fafc;
+            color: #3b82f6;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* Toggle Switch Styling (Swipe On/Off) */
+        .toggle-switch-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input[type="checkbox"] {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+            border-radius: 28px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch input[type="checkbox"]:checked + .toggle-slider {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .toggle-switch input[type="checkbox"]:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+
+        /* Button styling */
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        }
+        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4); }
+
+        .btn-timer {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        }
+        .btn-timer:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4); }
+        
+        .btn-metro {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+        }
+        .btn-metro:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4); }
+
+        .btn-timer-stop {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+        }
+        .btn-timer-stop:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4); }
+
+        .timer-display {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 20px;
+            display: none; /* Hidden by default */
+        }
+
+        /* Headings */
+        .view-section > h2 {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 8px 16px;
+            border-radius: 12px;
+            display: inline-block;
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            color: #1e293b;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* Keep nested card titles clean */
+        .card h2 {
+            background: none;
+            padding: 0;
+            box-shadow: none;
+            border: none;
+        }
+
+        /* Piece Summary Tags */
+        .piece-summary-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .piece-tag {
+            background-color: #f1f5f9;
+            color: #475569;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            box-shadow: inset 0 0 0 1px #e2e8f0;
+            transition: transform 0.2s;
+        }
+        .piece-tag:hover { transform: translateY(-2px); }
+
+        .piece-tag.focus {
+            background-color: #fffbeb;
+            color: #b45309;
+            box-shadow: inset 0 0 0 1px #fde68a;
+        }
+
+        /* Session Logs */
+        .session-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #f1f5f9;
+            border-left: 6px solid #818cf8;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+
+        .session-card.focus-session {
+            border-left-color: #f59e0b; /* Orange highlight for focus pieces */
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .session-title {
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: #1e293b;
+            letter-spacing: -0.01em;
+        }
+
+        .difficulty-tag {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .tag-easy { background-color: #10b981; }
+        .tag-medium { background-color: #f59e0b; }
+        .tag-hard { background-color: #ef4444; }
+
+        .session-meta {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .session-summary {
+            cursor: pointer;
+        }
+
+        .expand-indicator {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .session-details {
+            display: none;
+            margin-top: 12px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 12px;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .session-details.expanded {
+            display: block;
+        }
+
+        .session-notes {
+            font-size: 0.95rem;
+            color: #334155;
+            background-color: #f8fafc;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .btn-delete {
+            background-color: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            flex: none;
+        }
+        .btn-delete:hover {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-clear {
+            background-color: transparent;
+            color: #64748b;
+            border: 1px solid #94a3b8;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            flex: none;
+        }
+        .btn-clear:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* Goal Progress Bar */
+        .goal-container {
+            margin-top: 15px;
+        }
+        .progress-bar {
+            background-color: #334e68;
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background-color: #10b981;
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Achievements & Visualization */
+        .achievements-container {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .badge {
+            background-color: #f1f5f9;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            min-height: 92px;
+            padding: 12px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-align: center;
+            color: #94a3b8;
+            opacity: 0.72;
+            transition: all 0.3s;
+        }
+        .badge.unlocked {
+            background-color: #fffbeb;
+            border-color: #fde68a;
+            color: #b45309;
+            opacity: 1;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .badge-icon {
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+        .badge-progress {
+            color: #64748b;
+            font-size: 0.66rem;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+        .badge.unlocked .badge-progress {
+            color: #b45309;
+        }
+        .badge-state {
+            border-radius: 999px;
+            padding: 2px 7px;
+            background: #e2e8f0;
+            color: #64748b;
+            font-size: 0.58rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .badge.unlocked .badge-state {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .chart-container {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            gap: 8px;
+            margin-bottom: 25px;
+            padding: 20px 5px 10px 5px;
+            overflow-x: auto;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+        }
+        .chart-bar-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-width: 50px;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        .chart-bar {
+            background: linear-gradient(to top, #4f46e5, #818cf8);
+            width: 70%;
+            border-radius: 4px 4px 0 0;
+            min-height: 2px;
+            transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-bottom: 2px solid #cbd5e1; /* Visual baseline */
+        }
+        .chart-label {
+            font-size: 0.7rem;
+            color: #475569;
+            margin-top: 8px;
+            white-space: nowrap;
+            font-weight: 700;
+        }
+        .chart-val {
+            font-size: 0.65rem;
+            color: #1e293b;
+            margin-bottom: 4px;
+            font-weight: 900;
+        }
+
+        /* Mic Feedback Styling */
+        .mic-feedback-box {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 14px;
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            font-size: 0.85rem;
+            color: #1e40af;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Info Button Styling */
+        .info-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            background-color: #cbd5e1;
+            color: #475569;
+            border-radius: 50%;
+            font-size: 0.65rem;
+            font-weight: 900;
+            cursor: pointer;
+            margin-left: 6px;
+            border: 1px solid #94a3b8;
+            vertical-align: middle;
+        }
+
+        /* Mode Selector Styling */
+        .mode-selector {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 15px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            background: transparent;
+            color: #64748b;
+            border: none;
+            font-weight: 700;
+        }
+        .mode-btn.active {
+            background: white;
+            color: #3b82f6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* AI Review in History */
+        .session-ai-review {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        body.dark-mode .session-ai-review {
+            background: rgba(30, 41, 59, 0.6);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        /* Custom In-App Modal Styling */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+            border-radius: inherit;
+        }
+        .modal-card {
+            background: white;
+            border-radius: 24px;
+            padding: 25px;
+            width: 100%;
+            max-width: 340px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: modalScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes modalScale {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: #1e293b;
+        }
+        .modal-message {
+            font-size: 0.95rem;
+            color: #64748b;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Star Rating */
+        .star-rating {
+            display: flex;
+            gap: 5px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #cbd5e1;
+        }
+        .star-rating .star.active {
+            color: #f59e0b;
+        }
+        
+        /* Metronome */
+        .metronome-card {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.9)),
+                radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.18), transparent 45%);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+            overflow: hidden;
+        }
+
+        /* Realistic Metronome Styling */
+        .metronome-wrapper {
+            position: relative;
+            width: 210px;
+            height: 285px;
+            margin: 6px auto 22px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .metronome-visual {
+            width: 190px;
+            height: 260px;
+            position: relative;
+            background:
+                linear-gradient(145deg, #111827 0%, #1f2937 45%, #0f172a 100%);
+            clip-path: polygon(28% 0%, 72% 0%, 98% 100%, 2% 100%);
+            box-shadow: 0 18px 28px rgba(15, 23, 42, 0.32), inset 0 0 0 1px rgba(255,255,255,0.08);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 18px;
+        }
+
+        .metronome-face {
+            width: 142px;
+            height: 224px;
+            background:
+                linear-gradient(180deg, #f8fafc, #dbeafe 58%, #cbd5e1);
+            clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
+            position: relative;
+            box-shadow: inset 0 2px 8px rgba(15,23,42,0.12), 0 0 0 1px rgba(255,255,255,0.65);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .metronome-face::after {
+            content: "";
+            position: absolute;
+            left: 20px;
+            right: 20px;
+            bottom: 18px;
+            height: 12px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.16);
+        }
+
+        .metronome-ticks {
+            position: absolute;
+            top: 24px;
+            bottom: 48px;
+            width: 54px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            opacity: 0.42;
+            z-index: 1;
+        }
+
+        .tick-mark {
+            width: 100%;
+            height: 2px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        .pendulum-container {
+            position: absolute;
+            bottom: 34px;
+            left: 50%;
+            width: 0px;
+            height: 184px;
+            transform-origin: bottom center;
+            z-index: 2;
+        }
+
+        .pendulum-arm {
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(90deg, #64748b, #f8fafc, #334155);
+            position: absolute;
+            bottom: 0;
+            left: -2.5px;
+            border-radius: 2px;
+            box-shadow: 0 2px 6px rgba(15,23,42,0.24);
+        }
+
+        .pendulum-weight {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #fde68a, #f59e0b 52%, #b45309);
+            border-radius: 8px;
+            position: absolute;
+            left: -14px;
+            top: 60px;
+            box-shadow: 0 7px 12px rgba(15,23,42,0.28), inset 0 1px 1px rgba(255,255,255,0.55);
+            border: 1px solid rgba(146, 64, 14, 0.5);
+            transition: top 0.2s, background 0.1s;
+        }
+
+        .pendulum-pivot {
+            width: 18px;
+            height: 18px;
+            background: radial-gradient(circle at 35% 30%, #f8fafc, #475569 55%, #0f172a);
+            border-radius: 50%;
+            position: absolute;
+            bottom: -9px;
+            left: -9px;
+            z-index: 3;
+            box-shadow: 0 3px 7px rgba(0,0,0,0.45);
+        }
+
+        .metronome-readout {
+            text-align: center;
+            margin-bottom: 14px;
+        }
+        .metronome-readout #bpmDisplay {
+            font-size: 2.35rem;
+            font-weight: 900;
+            color: #1e293b;
+            letter-spacing: 0;
+        }
+        .tempo-label {
+            display: inline-flex;
+            margin-top: 5px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 0.76rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .bpm-slider {
+            width: 100%;
+            accent-color: #3b82f6;
+            margin-bottom: 16px;
+        }
+        .tempo-rail {
+            display: flex;
+            justify-content: space-between;
+            color: #64748b;
+            font-size: 0.72rem;
+            font-weight: 800;
+            margin-top: -8px;
+            margin-bottom: 15px;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #94a3b8;
+            font-style: italic;
+            margin-top: 10px;
+        }
+
+        /* Recommendations Styling */
+        .recommendations-container {
+            margin-bottom: 20px;
+        }
+        .recommendation-card {
+            background: linear-gradient(135deg, #fef3c7, #fffbeb);
+            border: 1px solid #fde68a;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.4s ease-out;
+        }
+        .rec-icon { font-size: 1.5rem; }
+        .rec-text { flex: 1; font-size: 0.85rem; color: #92400e; font-weight: 600; line-height: 1.4; }
+        .rec-btn {
+            background-color: #f59e0b;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+        }
+
+        /* Smart Practice Plan */
+        .practice-plan-card {
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+            animation: fadeIn 0.4s ease-out;
+        }
+        .practice-plan-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .practice-plan-title {
+            color: #1e293b;
+            font-size: 1rem;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+        .practice-plan-subtitle {
+            color: #64748b;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        .practice-plan-total {
+            background: #e0f2fe;
+            color: #0369a1;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+        .practice-plan-list {
+            display: grid;
+            gap: 10px;
+        }
+        .practice-plan-item {
+            display: grid;
+            grid-template-columns: 42px 1fr auto;
+            align-items: center;
+            gap: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px;
+        }
+        .plan-minutes {
+            background: #1e293b;
+            color: white;
+            border-radius: 10px;
+            padding: 8px 6px;
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 900;
+        }
+        .plan-label {
+            color: #0f172a;
+            font-size: 0.88rem;
+            font-weight: 800;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+        .plan-reason {
+            color: #64748b;
+            font-size: 0.74rem;
+            line-height: 1.35;
+            margin-top: 2px;
+        }
+        .plan-use-btn {
+            background: #3b82f6;
+            color: white;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 0.74rem;
+            white-space: nowrap;
+        }
+        .custom-plan-form {
+            display: grid;
+            grid-template-columns: 1fr 82px;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .custom-plan-form input {
+            margin-bottom: 0;
+        }
+        .custom-plan-note {
+            grid-column: 1 / -1;
+        }
+        .custom-plan-empty {
+            color: #94a3b8;
+            font-size: 0.82rem;
+            font-style: italic;
+            line-height: 1.4;
+            padding: 8px 2px 2px;
+        }
+        .plan-delete-btn {
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 8px 9px;
+            font-size: 0.74rem;
+            white-space: nowrap;
+        }
+        .plan-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+        .settings-toggle-list {
+            display: grid;
+            gap: 14px;
+        }
+        .feature-disabled-panel {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px dashed #cbd5e1;
+            border-radius: 14px;
+            color: #64748b;
+            padding: 16px;
+            text-align: center;
+            font-size: 0.86rem;
+            font-weight: 700;
+            line-height: 1.4;
+            margin-bottom: 18px;
+        }
+        .feature-disabled-panel button {
+            margin-top: 12px;
+            width: 100%;
+        }
+
+        @media (max-width: 380px) {
+            .practice-plan-item {
+                grid-template-columns: 42px 1fr;
+            }
+            .plan-use-btn {
+                grid-column: 1 / -1;
+                width: 100%;
+            }
+            .plan-actions {
+                grid-column: 1 / -1;
+            }
+            .custom-plan-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* View Sections */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            display: flex;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.05);
+            padding-bottom: max(15px, env(safe-area-inset-bottom));
+            padding-top: 12px;
+            padding-left: 12px;
+            padding-right: 12px;
+            position: relative;
+            z-index: 10; /* Keeps nav above the floating symbols */
+        }
+
+        .nav-btn {
+            flex: 1;
+            background-color: transparent;
+            color: #94a3b8;
+            border-radius: 20px;
+            padding: 8px 2px;
+            font-weight: 700;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin: 0;
+            border: none;
+        }
+
+        .nav-icon {
+            font-size: 1.3rem;
+            line-height: 1;
+            transition: transform 0.1s ease-in-out, color 0.3s ease;
+        }
+
+        .nav-text {
+            font-size: 0.65rem;
+            line-height: 1;
+        }
+
+        .nav-btn:hover:not(.active) {
+            color: #64748b;
+            background-color: transparent;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        .nav-btn.active {
+            color: #4f46e5;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            transform: translateY(-4px);
+        }
+
+        /* Metronome Active Indicator in Bottom Nav */
+        .nav-btn.metro-pulse .nav-icon {
+            color: #ef4444 !important;
+            text-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+        }
+
+        /* Start Screen */
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.25), transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.25), transparent 50%);
+            border-radius: inherit;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s;
+            overflow: hidden;
+        }
+        .start-screen-content {
+            text-align: center;
+            padding: 20px;
+            animation: fadeIn 1s ease-out;
+            z-index: 10;
+        }
+
+        /* Aesthetic Logo Styling */
+        .aesthetic-logo-container {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 35px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: float 6s ease-in-out infinite;
+        }
+        .logo-blob {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f472b6, #c084fc);
+            border-radius: 50%;
+            filter: blur(15px);
+            opacity: 0.8;
+            animation: pulse 4s ease-in-out infinite;
+        }
+        .logo-glass {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transform: rotate(-10deg);
+            transition: all 0.4s ease;
+        }
+        .aesthetic-logo-container:hover .logo-glass {
+            transform: rotate(0deg) scale(1.05);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .logo-icon-svg {
+            position: relative;
+            width: 45px;
+            height: 45px;
+            z-index: 2;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+        
+        .brand-title {
+            font-size: 2.8rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #ffffff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.03em;
+        }
+        .brand-subtitle {
+            font-size: 1.05rem;
+            color: #94a3b8;
+            margin-bottom: 40px;
+            font-weight: 500;
+        }
+        .btn-enter {
+            background-color: white;
+            color: #0f172a;
+            font-size: 1.1rem;
+            font-weight: 800;
+            padding: 16px 40px;
+            border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .btn-enter:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(255,255,255,0.2);
+            background-color: #f8fafc;
+        }
+        .start-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* Enhanced Dark Mode Styles */
+        body.dark-mode {
+            background-color: #020617;
+        }
+        body.dark-mode .app-container {
+            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #020617);
+            background-size: 400% 400%;
+            color: #f1f5f9;
+        }
+        body.dark-mode .card, 
+        body.dark-mode .session-card, 
+        body.dark-mode .bottom-nav, 
+        body.dark-mode .popular-pieces-container {
+            background: rgba(15, 23, 42, 0.85);
+            border-color: rgba(255, 255, 255, 0.05);
+            color: #f1f5f9;
+        }
+        body.dark-mode .view-section > h2 {
+            background: rgba(30, 41, 59, 0.9);
+            color: #f8fafc;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        body.dark-mode .card h2, body.dark-mode .session-title {
+            color: #f8fafc;
+            background: none;
+        }
+        body.dark-mode .form-section {
+            background-color: rgba(30, 41, 59, 0.4);
+            border-color: #334155;
+        }
+        body.dark-mode .toggle-switch-container {
+            color: #cbd5e1;
+        }
+        body.dark-mode .toggle-slider {
+            background-color: #334155;
+        }
+        body.dark-mode .form-section-title, body.dark-mode .session-meta {
+            color: #94a3b8;
+        }
+        body.dark-mode input[type="text"], body.dark-mode input[type="number"], 
+        body.dark-mode input[type="date"], body.dark-mode select, body.dark-mode textarea {
+            background-color: #0f172a;
+            color: #f1f5f9;
+            border-color: #334155;
+        }
+        body.dark-mode select option {
+            background-color: #0f172a;
+            color: #f1f5f9;
+        }
+        body.dark-mode input:focus, body.dark-mode select:focus, body.dark-mode textarea:focus {
+            background-color: #1e293b;
+            border-color: #818cf8;
+        }
+        body.dark-mode .popular-piece-item {
+            color: #cbd5e1;
+            border-bottom-color: #334155;
+        }
+        body.dark-mode .popular-piece-item:hover {
+            background-color: #1e293b;
+            color: #818cf8;
+        }
+        body.dark-mode #bpmDisplay { color: #f8fafc !important; }
+        body.dark-mode #micStatus { color: #94a3b8 !important; }
+        body.dark-mode #actionHelpText { color: #94a3b8 !important; }
+        body.dark-mode #timerDisplay { color: #60a5fa; }
+        body.dark-mode .nav-btn { color: #64748b; border-color: transparent; }
+        body.dark-mode .nav-btn:hover:not(.active) { background-color: transparent; color: #cbd5e1; }
+        body.dark-mode .nav-btn.active { 
+            color: #a5b4fc; 
+            background: transparent;
+            border-color: transparent;
+            box-shadow: none;
+        }
+        body.dark-mode .session-notes { background-color: #0f172a; color: #cbd5e1; }
+        body.dark-mode .chart-val { color: #cbd5e1; }
+        body.dark-mode .chart-label { color: #94a3b8; }
+        body.dark-mode .metronome-card { background: linear-gradient(180deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95)); border-color: #475569; }
+        body.dark-mode .metronome-face { background: linear-gradient(180deg, #1e293b, #0f172a); box-shadow: inset 0 0 12px rgba(0,0,0,0.5); }
+        body.dark-mode .tick-mark { background: #334155; }
+        body.dark-mode .tempo-label { background: rgba(59, 130, 246, 0.18); color: #93c5fd; }
+        body.dark-mode .tempo-rail { color: #94a3b8; }
+        
+        body.dark-mode .piece-tag {
+            background-color: #1e293b;
+            color: #cbd5e1;
+            box-shadow: inset 0 0 0 1px #334155;
+        }
+        body.dark-mode .piece-tag.focus {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: #fcd34d;
+            box-shadow: inset 0 0 0 1px #f59e0b;
+        }
+        
+        body.dark-mode .badge {
+            background-color: #1e293b;
+            border-color: #334155;
+            color: #64748b;
+        }
+        body.dark-mode .badge.unlocked {
+            background-color: rgba(245, 158, 11, 0.15);
+            border-color: #f59e0b;
+            color: #fcd34d;
+        }
+        body.dark-mode .badge-progress { color: #94a3b8; }
+        body.dark-mode .badge.unlocked .badge-progress { color: #fcd34d; }
+        body.dark-mode .badge-state {
+            background: #334155;
+            color: #cbd5e1;
+        }
+        body.dark-mode .badge.unlocked .badge-state {
+            background: #f59e0b;
+            color: #111827;
+        }
+        body.dark-mode .practice-plan-card {
+            background: rgba(30, 41, 59, 0.92);
+            border-color: #334155;
+        }
+        body.dark-mode .practice-plan-title,
+        body.dark-mode .plan-label {
+            color: #e2e8f0;
+        }
+        body.dark-mode .practice-plan-subtitle,
+        body.dark-mode .plan-reason {
+            color: #94a3b8;
+        }
+        body.dark-mode .practice-plan-item {
+            background: #0f172a;
+            border-color: #334155;
+        }
+        body.dark-mode .practice-plan-total {
+            background: rgba(59, 130, 246, 0.18);
+            color: #93c5fd;
+        }
+        body.dark-mode .plan-minutes {
+            background: #334155;
+        }
+        body.dark-mode .plan-delete-btn {
+            color: #fca5a5;
+            border-color: #7f1d1d;
+        }
+        body.dark-mode .feature-disabled-panel {
+            background: rgba(15, 23, 42, 0.88);
+            border-color: #475569;
+            color: #94a3b8;
+        }
+        
+        body.dark-mode .btn-clear {
+            border-color: #475569;
+            color: #cbd5e1;
+        }
+        body.dark-mode .btn-clear:hover {
+            background-color: #1e293b;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Floating Background Symbols -->
+        <div class="floating-symbols" id="appFloatingSymbols">
+            <div class="symbol">🎼</div>
+            <div class="symbol">🎵</div>
+            <div class="symbol">🎶</div>
+            <div class="symbol">𝄞</div>
+            <div class="symbol">𝄢</div>
+            <div class="symbol">♫</div>
+            <div class="symbol">♪</div>
+            <div class="symbol">🎼</div>
+            <div class="symbol">🎶</div>
+            <div class="symbol">🎵</div>
+            <div class="symbol">𝄞</div>
+            <div class="symbol">♫</div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="start-screen">
+            <!-- Start Screen Floating Symbols -->
+            <div class="floating-symbols">
+                <div class="symbol">🎼</div>
+                <div class="symbol">🎵</div>
+                <div class="symbol">🎶</div>
+                <div class="symbol">𝄞</div>
+                <div class="symbol">𝄢</div>
+                <div class="symbol">♫</div>
+                <div class="symbol">♪</div>
+                <div class="symbol">🎼</div>
+                <div class="symbol">🎶</div>
+                <div class="symbol">🎵</div>
+                <div class="symbol">𝄞</div>
+                <div class="symbol">♫</div>
+            </div>
+            <div class="start-screen-content">
+                <div class="aesthetic-logo-container">
+                    <div class="logo-blob"></div>
+                    <div class="logo-glass"></div>
+                    <svg viewBox="0 0 24 24" class="logo-icon-svg">
+                        <path d="M12 3v18M17 7v10M7 9v6M22 10v4M2 11v2" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h1 class="brand-title">Virtuoso</h1>
+                <p class="brand-subtitle">Master your instrument. Perfect your craft.</p>
+                <button class="btn-enter" onclick="enterApp()">
+                    Begin
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 8px;"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <header class="app-header">
+            <div class="header-title-container">
+                <div class="mini-logo">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M12 3v18M17 7v10M7 9v6M22 10v4M2 11v2" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h1 class="header-title">Virtuoso</h1>
+            </div>
+            
+            <!-- Stats Dashboard -->
+            <div class="dashboard">
+                <div class="stat-box">
+                    <span>Today</span>
+                    <strong id="statToday">0m</strong>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-box">
+                    <span>Total</span>
+                    <strong id="statTotal">0m</strong>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-box">
+                    <span>Streak</span>
+                    <strong id="statStreak">0 Days</strong>
+                </div>
+            </div>
+            <div class="goal-container">
+                <div style="display:flex; justify-content: space-between; color: #bae6fd; font-size: 0.85rem; margin-bottom: 5px; font-weight: 600;">
+                    <span>Daily Goal (<span id="dailyGoalText">30</span>m)</span>
+                    <span id="dailyGoalProgressText">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="dailyGoalFill"></div>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <!-- Log View -->
+            <div id="view-log" class="view-section active">
+            <!-- Recommendations generated by JS -->
+            <div id="recommendations" class="recommendations-container"></div>
+            <div id="practicePlan"></div>
+
+            <!-- Add Practice Card -->
+            <div class="card">
+                <h2>Add Practice</h2>
+                
+                <div class="form-section">
+                    <div class="form-section-title">🎵 What are you practicing?</div>
+                    <div class="input-group full-width" style="margin-bottom: 10px;">
+                        <input type="text" id="pieceName" placeholder="Piece or Exercise Name..." autocomplete="off">
+                        <div id="popularPieces" class="popular-pieces-container">
+                            <!-- Search results generated by JS -->
+                        </div>
+                    </div>
+                    <label class="checkbox-group" style="margin-bottom: 0;">
+                        <input type="checkbox" id="entryFocus"> Mark as a Focus Piece ⭐
+                    </label>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title">📋 Details</div>
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label for="entryInstrument">Instrument</label>
+                            <select id="entryInstrument">
+                                <option value="Piano" selected>Piano</option>
+                                <option value="Guitar">Guitar</option>
+                                <option value="Violin">Violin</option>
+                                <option value="Voice">Voice</option>
+                                <option value="Flute">Flute</option>
+                                <option value="Cello">Cello</option>
+                                <option value="Drums">Drums</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="entryDifficulty">Difficulty</label>
+                            <select id="entryDifficulty">
+                                <option value="Easy">Easy</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group full-width" style="margin-bottom: 0;">
+                        <label for="entryDate">Date</label>
+                        <input type="date" id="entryDate">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title">⭐ Review</div>
+                    <div class="mode-selector">
+                        <button id="modeTimer" class="mode-btn active" onclick="setTimerMode('timer')">⏲️ Timer</button>
+                        <button id="modeStopwatch" class="mode-btn" onclick="setTimerMode('stopwatch')">⏱️ Stopwatch</button>
+                    </div>
+
+                    <div class="form-row" style="align-items: flex-end; margin-bottom: 15px;">
+                        <div class="input-group" id="timerInputGroup" style="margin-bottom: 0;">
+                            <label for="practiceMinutes" id="minsLabel">Target Mins</label>
+                            <input type="number" id="practiceMinutes" placeholder="e.g. 50" min="1">
+                        </div>
+                        <div id="timerSeparator" style="font-weight: 800; color: #94a3b8; padding: 0 5px 15px 5px; font-size: 0.85rem;">OR</div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <button class="btn-timer" id="timerBtn" onclick="toggleTimer()" style="width: 100%;">⏱ Start Timer</button>
+                        </div>
+                    </div>
+                    <div id="timerHelpText" style="text-align: right; font-size: 0.8rem; color: #ef4444; margin-top: -5px; margin-bottom: 10px; font-weight: 600; display: none;"></div>
+                    <!-- Timer Display -->
+                    <div class="timer-display" id="timerDisplay" style="margin-top: 0; margin-bottom: 15px;">00:00</div>
+
+                    <div class="input-group full-width">
+                        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 10px;">
+                            <label style="margin:0;">Quality Rating</label>
+                        <label class="toggle-switch-container" style="flex-direction: column; gap: 4px;">
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="micToggleSwitch">
+                                <span class="toggle-slider"></span>
+                            </div>
+                            <span style="font-size: 0.7rem;">🎤 Auto-Listen <span class="info-btn" onclick="showAutoListenInfo(event)" style="width: 14px; height: 14px; font-size: 0.6rem; margin-left: 2px;">i</span></span>
+                        </label>
+                        </div>
+                        <div class="star-rating" id="entryRating" style="margin-bottom: 15px;">
+                            <span class="star" data-value="1">★</span>
+                            <span class="star" data-value="2">★</span>
+                            <span class="star" data-value="3">★</span>
+                            <span class="star" data-value="4">★</span>
+                            <span class="star" data-value="5">★</span>
+                        </div>
+                        <div id="micStatus" style="font-size: 0.8rem; color: #64748b; margin-top: 5px; display: none;">Listening... Play your piece!</div>
+                        <div id="micVisualizer" style="height: 6px; background: #e2e8f0; margin-top: 5px; border-radius: 3px; overflow: hidden; display: none; margin-bottom: 15px;">
+                            <div id="micLevel" style="height: 100%; width: 0%; background: #3b82f6; transition: width 0.1s;"></div>
+                        </div>
+                        <div id="micFeedback" class="mic-feedback-box"></div>
+                    </div>
+
+                    <div class="input-group full-width" style="margin-bottom: 0;">
+                        <label for="entryNotes">Practice Notes (Optional)</label>
+                        <textarea id="entryNotes" placeholder="What did you focus on today?"></textarea>
+                    </div>
+                </div>
+
+                <div class="help-text" id="actionHelpText" style="text-align: center; font-size: 0.85rem; color: #64748b; margin-bottom: 15px; font-weight: 500;">
+                    Enter minutes manually or use the timer, then click Save.
+                </div>
+
+                <button class="btn-add" id="btnManualSave" onclick="saveSession()" style="width: 100%;">Save</button>
+            </div>
+            </div>
+
+            <!-- Metronome View -->
+            <div id="view-metronome" class="view-section">
+                <div class="card metronome-card">
+                    <h2>Metronome</h2>
+
+                    <div class="metronome-wrapper">
+                        <div class="metronome-visual">
+                            <div class="metronome-face">
+                                <div class="metronome-ticks">
+                                    <div class="tick-mark" style="width: 20px;"></div>
+                                    <div class="tick-mark"></div>
+                                    <div class="tick-mark" style="width: 20px;"></div>
+                                    <div class="tick-mark"></div>
+                                    <div class="tick-mark" style="width: 20px;"></div>
+                                    <div class="tick-mark"></div>
+                                    <div class="tick-mark" style="width: 20px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pendulum-container" id="pendulumArm">
+                            <div class="pendulum-arm"></div>
+                            <div class="pendulum-weight" id="pendulumWeight"></div>
+                            <div class="pendulum-pivot"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="metronome-readout">
+                        <div id="bpmDisplay">120 BPM</div>
+                        <div class="tempo-label" id="tempoLabel">Moderato</div>
+                    </div>
+                    <input type="range" id="bpmSlider" class="bpm-slider" min="40" max="240" value="120">
+                    <div class="tempo-rail">
+                        <span>Slow</span>
+                        <span>Steady</span>
+                        <span>Fast</span>
+                    </div>
+                    <button class="btn-metro" id="metroBtn" onclick="toggleMetronome(event)" style="width: 100%;">Start Metronome</button>
+                </div>
+            </div>
+
+            <!-- Summary View -->
+            <div id="view-summary" class="view-section">
+                <h2>Practice Plan</h2>
+                <div id="customPracticePlan"></div>
+
+                <h2>Weekly Trend</h2>
+                <div id="weeklyChart" class="chart-container"></div>
+
+                <h2>Practice by Piece (Top 5)</h2>
+                <div id="pieceChart" class="chart-container"></div>
+
+                <h2>Piece Summary</h2>
+                <div id="pieceSummaryLog" class="piece-summary-container">
+                    <!-- Tags generated by JS -->
+                </div>
+                <div id="emptySummaryMessage" class="empty-message">Add a practice to see your progress!</div>
+
+                <h2>Achievements</h2>
+                <div id="achievementsList" class="achievements-container"></div>
+            </div>
+
+            <!-- History View -->
+            <div id="view-history" class="view-section">
+                <h2>Recent History</h2>
+                
+                <!-- History Filters -->
+                <div class="form-row" style="margin-bottom: 15px;">
+                    <input type="text" id="filterPiece" placeholder="Search piece..." oninput="renderSessionLog()" style="flex: 1; margin-bottom: 0;">
+                    <select id="filterInstrument" onchange="renderSessionLog()" style="flex: 1; margin-bottom: 0;">
+                        <option value="All">All Instruments</option>
+                        <option value="Piano">Piano</option>
+                        <option value="Guitar">Guitar</option>
+                        <option value="Violin">Violin</option>
+                        <option value="Voice">Voice</option>
+                        <option value="Flute">Flute</option>
+                        <option value="Cello">Cello</option>
+                        <option value="Drums">Drums</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="input-group full-width" style="margin-bottom: 15px;">
+                    <label for="filterDate">Filter by a specific date</label>
+                    <input type="date" id="filterDate" onchange="renderSessionLog()" style="margin-bottom: 0;">
+                </div>
+
+                <div style="text-align: right; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-clear" onclick="clearFilters()" style="flex: 1;">Clear Filters</button>
+                        <button class="btn-clear" onclick="exportData()" style="flex: 1; border-color: #3b82f6; color: #3b82f6;">Export PDF</button>
+                        <button class="btn-clear" onclick="document.getElementById('importFile').click()" style="flex: 1; border-color: #10b981; color: #10b981;">Import JSON</button>
+                        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                    </div>
+                </div>
+
+                <div id="sessionLog">
+                    <!-- Cards generated by JS -->
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div id="view-settings" class="view-section">
+                <h2>Settings</h2>
+                <div class="card">
+                    <div class="form-section">
+                        <div class="form-section-title">🎨 Appearance</div>
+                        <label class="toggle-switch-container" style="justify-content: space-between; display: flex; width: 100%; margin-bottom: 5px;">
+                            <span style="font-size: 1rem; color: inherit;">🌙 Dark Mode</span>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                                <span class="toggle-slider"></span>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-title">🎯 Goals</div>
+                        <label for="settingsDailyGoal">Daily Practice Goal (Minutes)</label>
+                        <input type="number" id="settingsDailyGoal" value="30" onchange="updateDailyGoal()" style="margin-top: 5px;">
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-title">🧩 Features</div>
+                        <div class="settings-toggle-list">
+                            <label class="toggle-switch-container" style="justify-content: space-between; display: flex; width: 100%;">
+                                <span style="font-size: 1rem; color: inherit;">Smart Practice Plan</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="featureSmartPlan" onchange="updateFeatureSetting('smartPlan', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                            <label class="toggle-switch-container" style="justify-content: space-between; display: flex; width: 100%;">
+                                <span style="font-size: 1rem; color: inherit;">Custom Practice Plan</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="featureCustomPlan" onchange="updateFeatureSetting('customPlan', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                            <label class="toggle-switch-container" style="justify-content: space-between; display: flex; width: 100%;">
+                                <span style="font-size: 1rem; color: inherit;">Comeback Suggestions</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="featureRecommendations" onchange="updateFeatureSetting('recommendations', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                            <label class="toggle-switch-container" style="justify-content: space-between; display: flex; width: 100%;">
+                                <span style="font-size: 1rem; color: inherit;">Summary Achievements</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="featureAchievements" onchange="updateFeatureSetting('achievements', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                            <label class="toggle-switch-container" style="justify-content: space-between; display: flex; width: 100%;">
+                                <span style="font-size: 1rem; color: inherit;">Summary Charts</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="featureCharts" onchange="updateFeatureSetting('charts', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                            <label class="toggle-switch-container" style="justify-content: space-between; display: flex; width: 100%;">
+                                <span style="font-size: 1rem; color: inherit;">Floating Background Notes</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="featureFloatingSymbols" onchange="updateFeatureSetting('floatingSymbols', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-title">📖 Help & Guide</div>
+                        <button class="btn-timer" style="width: 100%; margin-top: 5px;" onclick="showHelpPopup()">View How-To Guide</button>
+                    </div>
+                    <div class="form-section" style="margin-bottom: 0;">
+                        <div class="form-section-title">⚠️ Danger Zone</div>
+                        <button class="btn-timer-stop" style="width: 100%;" onclick="clearAllData()">🗑️ Clear All Data</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" onclick="switchTab('log')" id="btn-tab-log">
+                <span class="nav-icon">📝</span>
+                <span class="nav-text">Log</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('metronome')" id="btn-tab-metronome">
+                <span class="nav-icon">⏱️</span>
+                <span class="nav-text">Metro</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('summary')" id="btn-tab-summary">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Summary</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('history')" id="btn-tab-history">
+                <span class="nav-icon">🕒</span>
+                <span class="nav-text">History</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('settings')" id="btn-tab-settings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">Settings</span>
+            </button>
+        </nav>
+
+        <!-- In-App Modal UI -->
+        <div id="modalOverlay" class="modal-overlay">
+            <div class="modal-card">
+                <div id="modalTitle" class="modal-title">Notice</div>
+                <div id="modalMessage" class="modal-message">Message goes here.</div>
+                <div class="modal-actions">
+                    <button id="modalCancelBtn" class="btn-clear" style="flex: 1; display: none;" onclick="closeInAppModal()">Cancel</button>
+                    <button id="modalConfirmBtn" class="btn-add" style="flex: 1;">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // JAVASCRIPT: Logic, Saving, and Interaction
+        // ==========================================
+
+        // 1. Data Setup
+        // We store an array of "session" objects.
+        // We use a new localStorage key 'musicTrackerSessions' to hold our new detailed records.
+        const defaultSettings = {
+            darkMode: false,
+            dailyGoal: 30,
+            smartPlan: true,
+            customPlan: true,
+            recommendations: true,
+            achievements: true,
+            charts: true,
+            floatingSymbols: true
+        };
+        let sessions = JSON.parse(localStorage.getItem('musicTrackerSessions')) || [];
+        let userSettings = { ...defaultSettings, ...(JSON.parse(localStorage.getItem('virtuosoSettings')) || {}) };
+        let customPracticePlan = JSON.parse(localStorage.getItem('virtuosoCustomPracticePlan')) || [];
+        
+        // Timer variables
+        let isTimerRunning = false;
+        let timerSeconds = 0;
+        let timerInterval = null;
+        let timerMode = 'timer'; // 'timer' (countdown) or 'stopwatch' (countup)
+        let timerStartedAt = null;
+        let timerTargetSeconds = 0;
+        let currentRating = 3;
+        let lastAiReview = null; // Stores the result of the last Auto-Listen analysis
+        let generatedPracticePlan = [];
+        let audioCtx = null;
+        let metroInterval = null;
+        let isMetroRunning = false;
+        let currentBpm = 120;
+        let nextNoteTime = 0.0;
+        let scheduleAheadTime = 0.1;
+        let isLeft = true;
+        let beatFlashTimeout = null;
+
+        // Expanded Database of popular pieces and exercises
+        const popularPiecesDB = [
+            // Scales - Major
+            "C Major Scale", "G Major Scale", "D Major Scale", "A Major Scale", "E Major Scale", "B Major Scale", "F# Major Scale", "C# Major Scale",
+            "F Major Scale", "Bb Major Scale", "Eb Major Scale", "Ab Major Scale", "Db Major Scale", "Gb Major Scale", "Cb Major Scale",
+            
+            // Scales - Minor
+            "A Minor Scale", "E Minor Scale", "B Minor Scale", "F# Minor Scale", "C# Minor Scale", "G# Minor Scale", "D# Minor Scale", "A# Minor Scale",
+            "D Minor Scale", "G Minor Scale", "C Minor Scale", "F Minor Scale", "Bb Minor Scale", "Eb Minor Scale", "Ab Minor Scale",
+            
+            // Exercises
+            "Hanon Exercises",
+            "Czerny Exercises",
+            "Arpeggios",
+            "Chromatic Scale",
+            "Contrary Motion Scales",
+            
+            // Popular Pieces
+            "Für Elise",
+            "Moonlight Sonata",
+            "Minuet in G",
+            "Clair de Lune",
+            "Prelude in C Major",
+            "Canon in D",
+            "Flight of the Bumblebee",
+            "Eine kleine Nachtmusik",
+            "Swan Lake",
+            "The Four Seasons",
+            "Rhapsody in Blue",
+            "Waltz of the Flowers",
+            "Hungarian Rhapsody No. 2",
+            "Nocturne in E-flat major (Op. 9 No. 2)",
+            "Chopin Etude Op. 10 No. 3",
+            "Rachmaninoff Prelude in C# Minor",
+            "Debussy Arabesque No. 1",
+            "Gymnopédie No. 1",
+            "Maple Leaf Rag",
+            "The Entertainer",
+            "Ode to Joy",
+            "Asturias",
+            "River Flows in You",
+            "Nuvole Bianche",
+            "Comptine d'un autre été : L'après-midi",
+            "Turkish March",
+            "Liebestraum No. 3",
+            "Pathétique Sonata",
+            "Fantaisie-Impromptu",
+            "Waltz in A Minor",
+            "Minute Waltz",
+            "La Campanella",
+            "Prelude in E Minor",
+            "The Blue Danube",
+            "Radetzky March",
+            "Jesu, Joy of Man's Desiring",
+            "Toccata and Fugue in D Minor",
+            "Air on the G String",
+            "Goldberg Variations",
+            "Pictures at an Exhibition",
+            "The Carnival of the Animals",
+            "The Nutcracker Suite",
+            "1812 Overture",
+            "Dance of the Sugar Plum Fairy",
+            "Boléro",
+            "Carmen Suite",
+            "Habanera",
+            "In the Hall of the Mountain King",
+            "Morning Mood",
+            "Ride of the Valkyries",
+            "Wedding March",
+            "Bridal Chorus"
+        ];
+
+        // Initialize the app on load
+        initApp();
+
+        function initApp() {
+            // Auto-fill today's date in the date input
+            applySettings();
+            document.getElementById('entryDate').value = getTodayDateString();
+            // Setup the autocomplete search bar
+            setupAutocomplete();
+            // Setup Stars
+            setupStars();
+            // Setup Metronome Slider
+            setupMetronomeUI();
+            // Draw the UI
+            updateUI();
+
+            // Handle toggle changes during a live timer session
+            document.getElementById('micToggleSwitch').addEventListener('change', function() {
+                if (isTimerRunning) {
+                    if (this.checked && !isMicListening) {
+                        startMicAnalysis();
+                    } else if (!this.checked && isMicListening) {
+                        stopMicAnalyzerAndRate();
+                    }
+                }
+            });
+        }
+
+        function applySettings() {
+            if (userSettings.darkMode) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeToggle').checked = true;
+            }
+            document.getElementById('settingsDailyGoal').value = userSettings.dailyGoal || 30;
+            syncSettingsControls();
+            applyFeatureVisibility();
+        }
+
+        function syncSettingsControls() {
+            const featureToggles = {
+                featureSmartPlan: 'smartPlan',
+                featureCustomPlan: 'customPlan',
+                featureRecommendations: 'recommendations',
+                featureAchievements: 'achievements',
+                featureCharts: 'charts',
+                featureFloatingSymbols: 'floatingSymbols'
+            };
+
+            document.getElementById('darkModeToggle').checked = !!userSettings.darkMode;
+            document.getElementById('settingsDailyGoal').value = userSettings.dailyGoal || 30;
+            for (const [id, key] of Object.entries(featureToggles)) {
+                const input = document.getElementById(id);
+                if (input) input.checked = userSettings[key] !== false;
+            }
+        }
+
+        function enterApp() {
+            document.getElementById('startScreen').classList.add('hidden');
+        }
+
+        function setupStars() {
+            document.querySelectorAll('.star').forEach(star => {
+                star.addEventListener('click', (e) => {
+                    currentRating = parseInt(e.target.getAttribute('data-value'));
+                    updateStars();
+                });
+            });
+            updateStars();
+        }
+
+        function updateStars() {
+            document.querySelectorAll('.star').forEach(star => {
+                if(parseInt(star.getAttribute('data-value')) <= currentRating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+        
+        function setupMetronomeUI() {
+            document.getElementById('bpmSlider').addEventListener('input', function(e) {
+                currentBpm = parseInt(e.target.value);
+                document.getElementById('bpmDisplay').innerText = `${currentBpm} BPM`;
+                const tempoLabel = document.getElementById('tempoLabel');
+                if (tempoLabel) tempoLabel.innerText = getTempoLabel(currentBpm);
+                
+                const weight = document.getElementById('pendulumWeight');
+                if (weight) {
+                    const percent = (currentBpm - 40) / (240 - 40);
+                    const topPos = 32 + (percent * 92); 
+                    weight.style.top = `${topPos}px`;
+                }
+            });
+            document.getElementById('bpmSlider').dispatchEvent(new Event('input'));
+        }
+
+        function getTempoLabel(bpm) {
+            if (bpm < 60) return "Largo";
+            if (bpm < 76) return "Adagio";
+            if (bpm < 108) return "Andante";
+            if (bpm < 121) return "Moderato";
+            if (bpm < 156) return "Allegro";
+            if (bpm < 176) return "Vivace";
+            return "Presto";
+        }
+
+        // Setup Google-style search autocomplete
+        function setupAutocomplete() {
+            const input = document.getElementById('pieceName');
+            const container = document.getElementById('popularPieces');
+
+            // Trigger when the user types
+            input.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                container.innerHTML = ''; // Clear previous results
+
+                if (!query) {
+                    container.style.display = 'none';
+                    return;
+                }
+
+                // Combine built-in DB with every unique piece the user has ever logged
+                const userPieces = [...new Set(sessions.map(s => s.pieceName))];
+                const combinedDB = [...new Set([...popularPiecesDB, ...userPieces])];
+                const matches = combinedDB.filter(piece => piece.toLowerCase().includes(query));
+
+                if (matches.length > 0) {
+                    container.style.display = 'flex';
+                    matches.forEach(piece => {
+                        const item = document.createElement('div');
+                        item.className = 'popular-piece-item';
+                        item.innerText = piece;
+                        
+                        // Using mousedown so it triggers before the input loses focus (blur)
+                        item.addEventListener('mousedown', function(e) {
+                            e.preventDefault(); // Prevent focus loss
+                            input.value = piece;
+                            container.style.display = 'none';
+                        });
+                        
+                        container.appendChild(item);
+                    });
+                } else {
+                    container.style.display = 'none';
+                }
+            });
+
+            // Hide the dropdown when clicking elsewhere
+            input.addEventListener('blur', function() {
+                container.style.display = 'none';
+            });
+
+            // Show dropdown again if returning to field and it has text
+            input.addEventListener('focus', function() {
+                if (this.value.trim() !== '') {
+                    this.dispatchEvent(new Event('input'));
+                }
+            });
+        }
+
+        // Helper: Get today's date in YYYY-MM-DD format
+        function getTodayDateString() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function escapeHTML(value) {
+            const div = document.createElement('div');
+            div.innerText = value ?? '';
+            return div.innerHTML;
+        }
+
+        function getSessionMinutes(session) {
+            const minutes = Number(session.minutes);
+            return Number.isFinite(minutes) && minutes > 0 ? minutes : 0;
+        }
+
+        function getUniquePracticeDates() {
+            return [...new Set(sessions
+                .map(session => session.date)
+                .filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date))
+            )].sort();
+        }
+
+        // 2. Saving a Session
+        function saveSession() {
+            const pieceName = document.getElementById('pieceName').value.trim();
+            const instrument = document.getElementById('entryInstrument').value;
+            const date = document.getElementById('entryDate').value;
+            const minutes = parseInt(document.getElementById('practiceMinutes').value);
+            const difficulty = document.getElementById('entryDifficulty').value;
+            const notes = document.getElementById('entryNotes').value.trim();
+            const isFocus = document.getElementById('entryFocus').checked;
+            const helpText = document.getElementById('actionHelpText');
+
+            // Basic Validation
+            if (!pieceName) {
+                helpText.innerText = "❌ Please enter a piece name.";
+                helpText.style.color = "#ef4444"; // Error red
+                return;
+            }
+            if (!date) {
+                helpText.innerText = "❌ Please select a date.";
+                helpText.style.color = "#ef4444";
+                return;
+            }
+            if (isNaN(minutes) || minutes <= 0) {
+                helpText.innerText = "❌ Please enter valid practice minutes.";
+                helpText.style.color = "#ef4444";
+                return;
+            }
+
+            // Automatically stop listening and rate if the mic is still running when they save
+            if (isMicListening) {
+                stopMicAnalyzerAndRate();
+            }
+
+            // Create the session object
+            const newSession = {
+                id: Date.now(), // Unique ID based on exact timestamp
+                pieceName: pieceName,
+                instrument: instrument,
+                date: date,
+                minutes: minutes,
+                difficulty: difficulty,
+                rating: currentRating,
+                notes: notes,
+                isFocus: isFocus,
+                aiReview: lastAiReview // Attach the AI insights to the session
+            };
+
+            // Add to our list, save, and refresh UI
+            sessions.push(newSession);
+            saveData();
+            updateUI();
+
+            // Clear form inputs for the next entry (Keep date and difficulty as they were)
+            document.getElementById('pieceName').value = "";
+            document.getElementById('practiceMinutes').value = "";
+            document.getElementById('entryNotes').value = "";
+            document.getElementById('entryFocus').checked = false;
+            document.getElementById('micFeedback').style.display = "none";
+            document.getElementById('micStatus').style.display = "none";
+            currentRating = 3;
+            lastAiReview = null;
+            updateStars();
+
+            // Show success popup
+            showInAppModal("Session Saved", "✅ Your practice session has been recorded successfully!", "Great!");
+        }
+
+        // 3. Timer Logic
+        function getTimerElapsedSeconds() {
+            if (!timerStartedAt) return 0;
+            return Math.max(0, Math.floor((Date.now() - timerStartedAt) / 1000));
+        }
+
+        function resetTimerState() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            isTimerRunning = false;
+            timerStartedAt = null;
+            timerTargetSeconds = 0;
+            timerSeconds = 0;
+        }
+
+        function toggleTimer(targetReached = false) {
+            const timerBtn = document.getElementById('timerBtn');
+            const timerDisplay = document.getElementById('timerDisplay');
+            const btnManualSave = document.getElementById('btnManualSave');
+            const actionHelpText = document.getElementById('actionHelpText');
+            const timerHelpText = document.getElementById('timerHelpText');
+            const micToggle = document.getElementById('micToggleSwitch');
+            const targetInputGroup = document.getElementById('timerInputGroup');
+            const separator = document.getElementById('timerSeparator');
+
+            if (!isTimerRunning) {
+                // STARTING THE TIMER
+                if (document.getElementById('pieceName').value.trim() === "") {
+                    timerHelpText.innerText = "❌ Please enter a piece name before starting.";
+                    timerHelpText.style.display = "block";
+                    setTimeout(() => { timerHelpText.style.display = "none"; }, 4000);
+                    return;
+                }
+
+                const targetVal = parseInt(document.getElementById('practiceMinutes').value);
+                if (timerMode === 'timer' && (isNaN(targetVal) || targetVal <= 0)) {
+                    timerHelpText.innerText = "❌ Please set target minutes for the timer.";
+                    timerHelpText.style.display = "block";
+                    setTimeout(() => { timerHelpText.style.display = "none"; }, 4000);
+                    return;
+                }
+
+                if (timerMode === 'timer') document.getElementById('practiceMinutes').dataset.initialTarget = targetVal;
+                timerHelpText.style.display = "none";
+                actionHelpText.style.color = "#64748b";
+                lastAiReview = null;
+                document.getElementById('micFeedback').style.display = "none";
+
+                // Only start listening if the toggle is ON
+                if (micToggle.checked) {
+                    startMicAnalysis();
+                }
+
+                isTimerRunning = true;
+                timerStartedAt = Date.now();
+                timerTargetSeconds = (timerMode === 'timer') ? targetVal * 60 : 0;
+                timerSeconds = (timerMode === 'timer') ? timerTargetSeconds : 0;
+                
+                timerBtn.innerText = (timerMode === 'timer') ? "⏹ Stop Timer" : "⏹ Stop Stopwatch";
+                timerBtn.classList.remove('btn-timer');
+                timerBtn.classList.add('btn-timer-stop');
+                timerDisplay.style.display = "block";
+                document.getElementById('practiceMinutes').disabled = true;
+                btnManualSave.style.display = "none";
+                
+                if (timerMode === 'timer') {
+                    targetInputGroup.style.display = 'block';
+                    if (separator) separator.style.display = 'block';
+                    document.getElementById('minsLabel').innerText = "Target Mins";
+                    actionHelpText.innerText = `Goal: ${targetVal} min. Auto-saving when finished.`;
+                    document.getElementById('timerDisplay').innerText = formatTimerTime(timerSeconds);
+                } else {
+                    targetInputGroup.style.display = 'none';
+                    if (separator) separator.style.display = 'none';
+                    actionHelpText.innerText = "Stopwatch active. Track your progress!";
+                    document.getElementById('timerDisplay').innerText = "00:00";
+                }
+
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+            } else {
+                // STOPPING THE TIMER
+                const elapsed = getTimerElapsedSeconds();
+                resetTimerState();
+
+                // If mic was on, stopMicAnalyzerAndRate will handle the calculated minutes update
+                if (isMicListening) {
+                    stopMicAnalyzerAndRate(elapsed);
+                } else {
+                    document.getElementById('practiceMinutes').value = elapsed > 0 ? Math.max(1, Math.ceil(elapsed / 60)) : "";
+                }
+
+                document.getElementById('practiceMinutes').disabled = false;
+                targetInputGroup.style.display = 'block';
+                if (separator) separator.style.display = (timerMode === 'timer') ? 'block' : 'none';
+                document.getElementById('minsLabel').innerText = "Mins Practiced";
+                
+                // Reset UI Timer elements
+                timerBtn.innerText = (timerMode === 'timer') ? "⏱ Start Timer" : "⏱ Start Stopwatch";
+                timerBtn.classList.remove('btn-timer-stop');
+                timerBtn.classList.add('btn-timer');
+                timerDisplay.style.display = "none";
+                timerDisplay.innerText = "00:00";
+                
+                if (targetReached === true) {
+                    btnManualSave.style.display = "none";
+                    actionHelpText.innerText = "🎯 Target reached! Auto-saving...";
+                    actionHelpText.style.color = "#10b981";
+                    setTimeout(() => {
+                        saveSession();
+                        btnManualSave.style.display = "block";
+                    }, 1500);
+                } else {
+                    btnManualSave.style.display = "block";
+                    actionHelpText.style.color = "#64748b";
+                    actionHelpText.innerText = "Session stopped. Add the piece name and review, then click Save.";
+                }
+            }
+        }
+
+        function updateTimerDisplay() {
+            if (timerMode === 'timer') {
+                const elapsed = getTimerElapsedSeconds();
+                timerSeconds = Math.max(0, timerTargetSeconds - elapsed);
+                if (timerSeconds <= 0 && isTimerRunning) {
+                    toggleTimer(true);
+                    return;
+                }
+            } else {
+                timerSeconds = getTimerElapsedSeconds();
+            }
+            
+            document.getElementById('timerDisplay').innerText = formatTimerTime(timerSeconds);
+        }
+
+        function formatTimerTime(totalSeconds) {
+            let mins = Math.floor(Math.abs(totalSeconds) / 60);
+            let secs = Math.abs(totalSeconds) % 60;
+            let displayMins = mins < 10 ? "0" + mins : mins;
+            let displaySecs = secs < 10 ? "0" + secs : secs;
+            return `${displayMins}:${displaySecs}`;
+        }
+
+        // New In-App Modal System
+        function showInAppModal(title, message, confirmBtnText = "OK", onConfirm = null, isDanger = false) {
+            const overlay = document.getElementById('modalOverlay');
+            const titleEl = document.getElementById('modalTitle');
+            const msgEl = document.getElementById('modalMessage');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            const cancelBtn = document.getElementById('modalCancelBtn');
+
+            titleEl.innerText = title;
+            msgEl.innerHTML = message;
+            confirmBtn.innerText = confirmBtnText;
+            confirmBtn.className = isDanger ? 'btn-timer-stop' : 'btn-add';
+
+            if (onConfirm) {
+                cancelBtn.style.display = "block";
+                confirmBtn.onclick = () => { overlay.style.display = "none"; onConfirm(); };
+            } else {
+                cancelBtn.style.display = "none";
+                confirmBtn.onclick = () => { overlay.style.display = "none"; };
+            }
+            overlay.style.display = "flex";
+        }
+
+        function closeInAppModal() {
+            document.getElementById('modalOverlay').style.display = "none";
+        }
+
+        // 4. Delete a Session
+        function deleteSession(id) {
+            showInAppModal("Delete Record", "Are you sure you want to delete this practice session?", "Delete", () => {
+                sessions = sessions.filter(session => session.id !== id);
+                saveData();
+                updateUI();
+            }, true);
+        }
+
+        // Settings Functions
+        function toggleDarkMode() {
+            userSettings.darkMode = document.getElementById('darkModeToggle').checked;
+            if (userSettings.darkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            saveSettings();
+        }
+
+        function updateFeatureSetting(key, value) {
+            if (!(key in defaultSettings)) return;
+            userSettings[key] = value;
+            saveSettings();
+            syncSettingsControls();
+            applyFeatureVisibility();
+            updateUI();
+        }
+
+        function applyFeatureVisibility() {
+            document.getElementById('appFloatingSymbols').style.display = userSettings.floatingSymbols ? 'block' : 'none';
+            document.querySelectorAll('#startScreen .floating-symbols').forEach(el => {
+                el.style.display = userSettings.floatingSymbols ? 'block' : 'none';
+            });
+        }
+
+        function enableFeature(key) {
+            updateFeatureSetting(key, true);
+        }
+
+        function setTimerMode(mode) {
+            if (isTimerRunning) return; // Prevent changing mode while running
+            timerMode = mode;
+            
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            const targetInputGroup = document.getElementById('timerInputGroup');
+            const label = document.getElementById('minsLabel');
+            const separator = document.getElementById('timerSeparator');
+            const timerBtn = document.getElementById('timerBtn');
+
+            if (mode === 'stopwatch') {
+                document.getElementById('modeStopwatch').classList.add('active');
+                targetInputGroup.style.display = 'none';
+                separator.style.display = 'none';
+                timerBtn.innerText = "⏱ Start Stopwatch";
+            } else {
+                document.getElementById('modeTimer').classList.add('active');
+                targetInputGroup.style.display = 'block';
+                separator.style.display = 'block';
+                label.innerText = "Target Mins";
+                timerBtn.innerText = "⏱ Start Timer";
+            }
+        }
+
+        function showHelpPopup() {
+            const helpContent = `
+                <div style="text-align: left; font-size: 0.9rem;">
+                    <p style="margin-bottom: 12px;"><strong>1. Tracking Time:</strong> Use <b>Timer</b> mode to set a countdown goal or <b>Stopwatch</b> to count up as you play.</p>
+                    <p style="margin-bottom: 12px;"><strong>2. Auto-Listen AI:</strong> This analyzes your playing frequency. It <i>only</i> starts when you press the Start button.</p>
+                    <p style="margin-bottom: 12px;"><strong>3. Actual Minutes:</strong> With Auto-Listen on, your logged time is adjusted to show <i>actual</i> playing time vs. silence.</p>
+                    <p style="margin-bottom: 12px;"><strong>4. Plans:</strong> Use the smart plan or build your own practice blocks from the Log screen.</p>
+                    <p><strong>5. Settings:</strong> Turn optional panels on or off whenever you want a simpler app.</p>
+                </div>
+            `;
+            showInAppModal("How to use Virtuoso", helpContent);
+        }
+
+        function showAutoListenInfo(e) {
+            if (e) e.preventDefault(); // Prevent toggling the switch when clicking info
+            const infoContent = `
+                <div style="text-align: left; font-size: 0.9rem;">
+                    <p style="margin-bottom: 12px;"><strong>What is Auto-Listen?</strong></p>
+                    <p style="margin-bottom: 12px;">This feature uses your microphone to detect actual musical notes while you practice.</p>
+                    <p style="margin-bottom: 12px;"><strong>Why use it?</strong></p>
+                    <ul style="margin-left: 20px; margin-bottom: 12px;">
+                        <li>Logs <b>Actual Played Time</b> by filtering out silence.</li>
+                        <li>Generates 🤖 <b>AI Insights</b> based on your density.</li>
+                        <li>Calculates your quality rating automatically.</li>
+                    </ul>
+                    <p><i>Note: Analysis only runs when your Timer or Stopwatch is active.</i></p>
+                </div>
+            `;
+            showInAppModal("About Auto-Listen", infoContent);
+        }
+
+        function updateDailyGoal() {
+            const val = parseInt(document.getElementById('settingsDailyGoal').value);
+            if (!isNaN(val) && val > 0) {
+                userSettings.dailyGoal = val;
+                saveSettings();
+                renderDashboard();
+            }
+        }
+
+        // 5. Save Data to Browser
+        function saveData() {
+            localStorage.setItem('musicTrackerSessions', JSON.stringify(sessions));
+        }
+
+        function saveCustomPracticePlan() {
+            localStorage.setItem('virtuosoCustomPracticePlan', JSON.stringify(customPracticePlan));
+        }
+        
+        function saveSettings() {
+            localStorage.setItem('virtuosoSettings', JSON.stringify(userSettings));
+        }
+
+        function clearAllData() {
+            showInAppModal("Clear All Data", "⚠️ This will delete ALL history. This cannot be undone!", "Clear All", () => {
+                sessions = [];
+                saveData();
+                updateUI();
+                showInAppModal("Data Cleared", "All practice data has been cleared.");
+            }, true);
+        }
+
+        // 6. Master function to update all UI sections
+        function updateUI() {
+            renderDashboard();
+            renderPracticePlan();
+            renderCustomPracticePlan();
+            renderPieceSummary();
+            renderSessionLog();
+            renderAchievements();
+            renderCharts();
+            renderRecommendations();
+        }
+
+        function buildPracticePlan() {
+            const dailyGoal = userSettings.dailyGoal || 30;
+            const todayStr = getTodayDateString();
+            const todayMinutes = sessions
+                .filter(s => s.date === todayStr)
+                .reduce((sum, s) => sum + s.minutes, 0);
+            const remainingMinutes = Math.max(15, dailyGoal - todayMinutes);
+            const targetMinutes = Math.min(75, remainingMinutes);
+
+            const plan = [
+                {
+                    pieceName: "Technique Warmup",
+                    minutes: Math.max(5, Math.round(targetMinutes * 0.2)),
+                    difficulty: "Easy",
+                    focus: false,
+                    reason: "Start with slow scales, arpeggios, or hand independence before repertoire.",
+                    notes: "Warmup: slow tempo, relaxed hands, even tone."
+                }
+            ];
+
+            const pieceStats = {};
+            sessions.forEach(session => {
+                const name = session.pieceName;
+                if (!pieceStats[name]) {
+                    pieceStats[name] = {
+                        name,
+                        minutes: 0,
+                        count: 0,
+                        lastDate: session.date,
+                        ratingTotal: 0,
+                        focus: false,
+                        difficulty: session.difficulty || "Medium"
+                    };
+                }
+                pieceStats[name].minutes += session.minutes;
+                pieceStats[name].count += 1;
+                pieceStats[name].ratingTotal += session.rating || 3;
+                if (session.date > pieceStats[name].lastDate) {
+                    pieceStats[name].lastDate = session.date;
+                    pieceStats[name].difficulty = session.difficulty || pieceStats[name].difficulty;
+                }
+                if (session.isFocus) pieceStats[name].focus = true;
+            });
+
+            const today = new Date(todayStr + 'T00:00:00');
+            const candidates = Object.values(pieceStats).map(piece => {
+                const lastDate = new Date(piece.lastDate + 'T00:00:00');
+                const daysAway = Math.max(0, Math.floor((today - lastDate) / (1000 * 60 * 60 * 24)));
+                const averageRating = piece.ratingTotal / piece.count;
+                const difficultyWeight = piece.difficulty === "Hard" ? 12 : piece.difficulty === "Medium" ? 7 : 3;
+                const focusWeight = piece.focus ? 18 : 0;
+                const ratingWeight = averageRating < 3.5 ? 12 : averageRating < 4.5 ? 5 : 0;
+                return {
+                    ...piece,
+                    daysAway,
+                    averageRating,
+                    score: daysAway * 3 + difficultyWeight + focusWeight + ratingWeight
+                };
+            }).sort((a, b) => b.score - a.score);
+
+            if (candidates.length > 0) {
+                const main = candidates[0];
+                plan.push({
+                    pieceName: main.name,
+                    minutes: Math.max(10, Math.round(targetMinutes * 0.55)),
+                    difficulty: main.difficulty,
+                    focus: true,
+                    reason: main.daysAway > 0 ? `Priority piece: last practiced ${main.daysAway} day${main.daysAway === 1 ? '' : 's'} ago.` : "Priority piece: continue today's momentum while it is fresh.",
+                    notes: "Main work: isolate the hardest 4-8 measures, then connect them slowly."
+                });
+            } else {
+                plan.push({
+                    pieceName: "New Piano Piece",
+                    minutes: Math.max(10, Math.round(targetMinutes * 0.55)),
+                    difficulty: "Medium",
+                    focus: true,
+                    reason: "Choose the piece you most want to move forward today.",
+                    notes: "Main work: pick one short section and practice it slowly with the metronome."
+                });
+            }
+
+            const review = candidates.find(piece => piece.name !== plan[1].pieceName && piece.daysAway >= 2) || candidates.find(piece => piece.name !== plan[1].pieceName);
+            if (review) {
+                plan.push({
+                    pieceName: review.name,
+                    minutes: Math.max(5, targetMinutes - plan.reduce((sum, item) => sum + item.minutes, 0)),
+                    difficulty: review.difficulty,
+                    focus: false,
+                    reason: review.daysAway >= 2 ? `Retention review: ${review.daysAway} days since the last pass.` : "Quick polish pass to keep it under your fingers.",
+                    notes: "Review: play once for memory, then once for musical shape."
+                });
+            } else {
+                plan.push({
+                    pieceName: "Sight Reading",
+                    minutes: Math.max(5, targetMinutes - plan.reduce((sum, item) => sum + item.minutes, 0)),
+                    difficulty: "Easy",
+                    focus: false,
+                    reason: "Round out the session with low-pressure reading and rhythm accuracy.",
+                    notes: "Sight reading: keep going, count steadily, no stopping."
+                });
+            }
+
+            return plan.filter(item => item.minutes > 0);
+        }
+
+        function renderPracticePlan() {
+            const container = document.getElementById('practicePlan');
+            if (!container) return;
+            if (!userSettings.smartPlan) {
+                container.innerHTML = '';
+                generatedPracticePlan = [];
+                return;
+            }
+
+            generatedPracticePlan = buildPracticePlan();
+            const totalMinutes = generatedPracticePlan.reduce((sum, item) => sum + item.minutes, 0);
+            const planItems = generatedPracticePlan.map((item, index) => `
+                <div class="practice-plan-item">
+                    <div class="plan-minutes">${item.minutes}m</div>
+                    <div>
+                        <div class="plan-label">${escapeHTML(item.pieceName)}</div>
+                        <div class="plan-reason">${escapeHTML(item.reason)}</div>
+                    </div>
+                    <button class="plan-use-btn" data-plan-index="${index}">Use</button>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="practice-plan-card">
+                    <div class="practice-plan-header">
+                        <div>
+                            <div class="practice-plan-title">Today's Practice Plan</div>
+                            <div class="practice-plan-subtitle">Balanced for warmup, focused work, and retention.</div>
+                        </div>
+                        <div class="practice-plan-total">${totalMinutes}m</div>
+                    </div>
+                    <div class="practice-plan-list">${planItems}</div>
+                </div>
+            `;
+
+            container.querySelectorAll('.plan-use-btn').forEach(button => {
+                button.addEventListener('click', () => usePracticePlanItem(parseInt(button.dataset.planIndex)));
+            });
+        }
+
+        function usePracticePlanItem(index) {
+            const item = generatedPracticePlan[index];
+            if (!item) return;
+
+            document.getElementById('pieceName').value = item.pieceName;
+            document.getElementById('practiceMinutes').value = item.minutes;
+            document.getElementById('entryDifficulty').value = item.difficulty;
+            document.getElementById('entryFocus').checked = item.focus;
+            document.getElementById('entryNotes').value = item.notes;
+            document.getElementById('pieceName').focus();
+        }
+
+        function renderCustomPracticePlan() {
+            const container = document.getElementById('customPracticePlan');
+            if (!container) return;
+            if (!userSettings.customPlan) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const planItems = customPracticePlan.length ? customPracticePlan.map((item, index) => `
+                <div class="practice-plan-item">
+                    <div class="plan-minutes">${item.minutes}m</div>
+                    <div>
+                        <div class="plan-label">${escapeHTML(item.pieceName)}</div>
+                        <div class="plan-reason">${escapeHTML(item.notes || 'Custom practice block')}</div>
+                    </div>
+                    <div class="plan-actions">
+                        <button class="plan-use-btn" data-custom-index="${index}">Use</button>
+                        <button class="plan-delete-btn" data-delete-custom-index="${index}">Delete</button>
+                    </div>
+                </div>
+            `).join('') : '<div class="custom-plan-empty">Build your own plan blocks here, then tap Use when you are ready to practice one.</div>';
+
+            container.innerHTML = `
+                <div class="practice-plan-card">
+                    <div class="practice-plan-header">
+                        <div>
+                            <div class="practice-plan-title">My Practice Plan</div>
+                            <div class="practice-plan-subtitle">Create the exact blocks you want for today.</div>
+                        </div>
+                    </div>
+                    <div class="custom-plan-form">
+                        <input type="text" id="customPlanPiece" placeholder="Piece or focus area">
+                        <input type="number" id="customPlanMinutes" placeholder="Mins" min="1">
+                        <input type="text" id="customPlanNotes" class="custom-plan-note" placeholder="Notes, section, or goal">
+                    </div>
+                    <button class="btn-add" onclick="addCustomPlanItem()" style="width: 100%; margin-bottom: 12px;">Add Block</button>
+                    <div class="practice-plan-list">${planItems}</div>
+                </div>
+            `;
+
+            container.querySelectorAll('[data-custom-index]').forEach(button => {
+                button.addEventListener('click', () => useCustomPlanItem(parseInt(button.dataset.customIndex)));
+            });
+            container.querySelectorAll('[data-delete-custom-index]').forEach(button => {
+                button.addEventListener('click', () => deleteCustomPlanItem(parseInt(button.dataset.deleteCustomIndex)));
+            });
+        }
+
+        function addCustomPlanItem() {
+            const pieceInput = document.getElementById('customPlanPiece');
+            const minutesInput = document.getElementById('customPlanMinutes');
+            const notesInput = document.getElementById('customPlanNotes');
+            const pieceName = pieceInput.value.trim();
+            const minutes = parseInt(minutesInput.value);
+            const notes = notesInput.value.trim();
+
+            if (!pieceName || isNaN(minutes) || minutes <= 0) {
+                showInAppModal("Plan Block Needed", "Add a piece or focus area and valid minutes first.");
+                return;
+            }
+
+            customPracticePlan.push({
+                id: Date.now(),
+                pieceName,
+                minutes,
+                notes
+            });
+            saveCustomPracticePlan();
+            renderCustomPracticePlan();
+        }
+
+        function useCustomPlanItem(index) {
+            const item = customPracticePlan[index];
+            if (!item) return;
+
+            document.getElementById('pieceName').value = item.pieceName;
+            document.getElementById('practiceMinutes').value = item.minutes;
+            document.getElementById('entryDifficulty').value = "Medium";
+            document.getElementById('entryFocus').checked = true;
+            document.getElementById('entryNotes').value = item.notes || "Custom practice plan block.";
+            document.getElementById('pieceName').focus();
+        }
+
+        function deleteCustomPlanItem(index) {
+            customPracticePlan.splice(index, 1);
+            saveCustomPracticePlan();
+            renderCustomPracticePlan();
+        }
+
+        // 7. Render Dashboard Stats
+        function renderDashboard() {
+            let totalOverall = 0;
+            let totalToday = 0;
+            const todayStr = getTodayDateString();
+
+            sessions.forEach(session => {
+                totalOverall += getSessionMinutes(session);
+                if (session.date === todayStr) {
+                    totalToday += getSessionMinutes(session);
+                }
+            });
+
+            // Format functions to make it look nice (e.g., "1h 15m")
+            const formatTime = (mins) => {
+                if (mins < 60) return `${mins}m`;
+                const h = Math.floor(mins / 60);
+                const m = mins % 60;
+                return m > 0 ? `${h}h ${m}m` : `${h}h`;
+            };
+
+            document.getElementById('statTotal').innerText = formatTime(totalOverall);
+            document.getElementById('statToday').innerText = formatTime(totalToday);
+            document.getElementById('statStreak').innerText = `${calculateStreak()} Days`;
+
+            // Daily Goal
+            const dailyGoalMins = userSettings.dailyGoal || 30; 
+            document.getElementById('dailyGoalText').innerText = dailyGoalMins;
+            let percentage = Math.min((totalToday / dailyGoalMins) * 100, 100);
+            document.getElementById('dailyGoalFill').style.width = percentage + '%';
+            document.getElementById('dailyGoalProgressText').innerText = Math.round(percentage) + '%';
+        }
+
+        // Helper: Calculate Practice Streak
+        function calculateStreak() {
+            // Get all unique dates practiced, sorted from newest to oldest
+            const uniqueDates = getUniquePracticeDates().reverse();
+            if (uniqueDates.length === 0) return 0;
+
+            let streak = 0;
+            let dateToCheck = new Date(); // Start checking from today
+            dateToCheck.setHours(0,0,0,0);
+
+            while (true) {
+                // Convert JS Date back to our YYYY-MM-DD string format
+                const y = dateToCheck.getFullYear();
+                const m = String(dateToCheck.getMonth() + 1).padStart(2, '0');
+                const d = String(dateToCheck.getDate()).padStart(2, '0');
+                const dateString = `${y}-${m}-${d}`;
+
+                if (uniqueDates.includes(dateString)) {
+                    streak++;
+                    dateToCheck.setDate(dateToCheck.getDate() - 1); // Move back 1 day
+                } else {
+                    // If today isn't logged yet, we don't break the streak if yesterday was logged.
+                    if (streak === 0 && dateString === getTodayDateString()) {
+                        dateToCheck.setDate(dateToCheck.getDate() - 1);
+                    } else {
+                        break; // Streak broken
+                    }
+                }
+            }
+            return streak;
+        }
+
+        // 8. Render Piece Summary Tags
+        function renderPieceSummary() {
+            const summaryContainer = document.getElementById('pieceSummaryLog');
+            const emptyMsg = document.getElementById('emptySummaryMessage');
+            summaryContainer.innerHTML = "";
+
+            if (sessions.length === 0) {
+                emptyMsg.style.display = "block";
+                return;
+            }
+            emptyMsg.style.display = "none";
+
+            // Group totals by piece name
+            const pieceTotals = {};
+            sessions.forEach(s => {
+                if (!pieceTotals[s.pieceName]) {
+                    pieceTotals[s.pieceName] = { minutes: 0, isFocus: false };
+                }
+                pieceTotals[s.pieceName].minutes += s.minutes;
+                // If it was marked focus in ANY session, we highlight it
+                if (s.isFocus) pieceTotals[s.pieceName].isFocus = true;
+            });
+
+            // Draw the tags
+            for (const [name, data] of Object.entries(pieceTotals)) {
+                const tag = document.createElement('div');
+                tag.className = `piece-tag ${data.isFocus ? 'focus' : ''}`;
+                tag.innerText = `${name} (${data.minutes}m) ${data.isFocus ? '⭐' : ''}`;
+                summaryContainer.appendChild(tag);
+            }
+        }
+
+        // 9. Render Detailed Session Log (Cards)
+        function renderSessionLog() {
+            const logElement = document.getElementById('sessionLog');
+            logElement.innerHTML = "";
+            
+            // Create a copy of sessions and sort from newest to oldest
+            const sortedSessions = [...sessions].sort((a, b) => b.id - a.id);
+
+            // Apply Filters
+            const pieceFilter = document.getElementById('filterPiece').value.toLowerCase().trim();
+            const instrumentFilter = document.getElementById('filterInstrument').value;
+            const filterDate = document.getElementById('filterDate').value;
+
+            const filteredSessions = sortedSessions.filter(session => {
+                const matchesPiece = session.pieceName.toLowerCase().includes(pieceFilter);
+                const matchesInstrument = instrumentFilter === 'All' || session.instrument === instrumentFilter;
+                const matchesDate = !filterDate || session.date === filterDate;
+                return matchesPiece && matchesInstrument && matchesDate;
+            });
+
+            if (filteredSessions.length === 0) {
+                logElement.innerHTML = '<div class="empty-message">No records match your filters.</div>';
+                return;
+            }
+
+            filteredSessions.forEach(session => {
+                const safeSessionId = Number(session.id);
+                if (!Number.isFinite(safeSessionId)) return;
+                const card = document.createElement('div');
+                card.className = `session-card ${session.isFocus ? 'focus-session' : ''}`;
+                
+                // Difficulty tag styling color class
+                const difficultyValue = ["Easy", "Medium", "Hard"].includes(session.difficulty) ? session.difficulty : "Medium";
+                const diffClass = `tag-${difficultyValue.toLowerCase()}`;
+                const safePieceName = escapeHTML(session.pieceName);
+                const safeInstrument = escapeHTML(session.instrument || 'Piano');
+                const safeDate = escapeHTML(session.date);
+                const safeDifficulty = escapeHTML(difficultyValue);
+                const safeNotes = escapeHTML(session.notes);
+                const safeAiTier = session.aiReview ? escapeHTML(session.aiReview.tier) : '';
+                const safeAiInsight = session.aiReview ? escapeHTML(session.aiReview.insight) : '';
+
+                // Generate the visual stars based on rating
+                const rating = session.rating || 3;
+                const starsDisplay = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+
+                card.innerHTML = `
+                    <div class="session-summary" onclick="toggleSessionDetails(${safeSessionId})">
+                        <div class="session-header">
+                            <div class="session-title">${session.isFocus ? '⭐ ' : ''}${safePieceName}</div>
+                            <span class="difficulty-tag ${diffClass}">${safeDifficulty}</span>
+                        </div>
+                        <div class="session-meta">
+                            🎵 ${safeInstrument} | 📅 ${safeDate} | ⏱️ ${session.minutes} mins 
+                            | <span style="color: #f59e0b; font-size: 1.05em; letter-spacing: 2px;">${starsDisplay}</span>
+                        </div>
+                        <div class="expand-indicator" id="indicator-${safeSessionId}">▼ Tap for details</div>
+                    </div>
+                    <div class="session-details" id="details-${safeSessionId}">
+                        ${session.aiReview ? `
+                            <div class="session-ai-review">
+                                <div style="font-weight: 800; font-size: 0.75rem; color: #3b82f6; margin-bottom: 4px; display: flex; justify-content: space-between;">
+                                    <span>🤖 AI INSIGHTS</span>
+                                    <span style="background:#3b82f6; color:white; padding: 1px 6px; border-radius: 4px; font-size: 0.6rem;">${safeAiTier}</span>
+                                </div>
+                                <div style="font-size: 0.85rem; line-height: 1.4; color: inherit;">
+                                    <strong>${session.aiReview.ratio}%</strong> musicality detected. ${safeAiInsight}
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${session.notes ? `<div class="session-notes"><strong>Notes:</strong><br>${safeNotes}</div>` : '<div class="session-notes" style="color: #94a3b8; font-style: italic;">No notes provided.</div>'}
+                        <button class="btn-delete" onclick="deleteSession(${safeSessionId})">Delete</button>
+                    </div>
+                `;
+                logElement.appendChild(card);
+            });
+        }
+
+        // 10. Clear History Filters
+        function clearFilters() {
+            document.getElementById('filterPiece').value = '';
+            document.getElementById('filterInstrument').value = 'All';
+            document.getElementById('filterDate').value = '';
+            renderSessionLog();
+        }
+
+        // 11. Toggle Session Details
+        function toggleSessionDetails(id) {
+            const detailsEl = document.getElementById(`details-${id}`);
+            const indicatorEl = document.getElementById(`indicator-${id}`);
+            if (detailsEl.classList.contains('expanded')) {
+                detailsEl.classList.remove('expanded');
+                indicatorEl.innerText = '▼ Tap for details';
+            } else {
+                detailsEl.classList.add('expanded');
+                indicatorEl.innerText = '▲ Hide details';
+            }
+        }
+
+        // 12. Tab Navigation
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`view-${tabId}`).classList.add('active');
+            document.getElementById(`btn-tab-${tabId}`).classList.add('active');
+            if (tabId === 'settings') syncSettingsControls();
+            if (tabId === 'summary') renderAchievements();
+        }
+
+        // 13. Metronome Logic
+        async function ensureMetronomeAudio() {
+            if (!window.AudioContext && !window.webkitAudioContext) {
+                showInAppModal("Metronome Error", "Your browser does not support Web Audio.");
+                return false;
+            }
+
+            if (!audioCtx || audioCtx.state === 'closed') {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            if (audioCtx.state === 'suspended') {
+                try {
+                    await audioCtx.resume();
+                } catch (err) {
+                    console.error(err);
+                    showInAppModal("Metronome Blocked", "Tap Start again and make sure browser sound is enabled.");
+                    return false;
+                }
+            }
+
+            return audioCtx.state === 'running';
+        }
+
+        function playClick(time) {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.type = 'square';
+            osc.frequency.value = 900; // high tick
+            gain.gain.setValueAtTime(0.0001, time);
+            gain.gain.linearRampToValueAtTime(0.45, time + 0.004);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+            
+            osc.start(time);
+            osc.stop(time + 0.08);
+
+            // Visual metronome synchronization
+            const timeToBeat = (time - audioCtx.currentTime) * 1000;
+            beatFlashTimeout = setTimeout(() => {
+            if (!isMetroRunning) return; // Prevent movement if stopped while scheduled
+            
+                const arm = document.getElementById('pendulumArm');
+                const weight = document.getElementById('pendulumWeight');
+                const navIcon = document.querySelector('#btn-tab-metronome .nav-icon');
+                const secs = 60.0 / currentBpm;
+
+                if(arm) {
+                    arm.style.transition = `transform ${secs}s ease-in-out`;
+                    arm.style.transform = isLeft ? 'rotate(35deg)' : 'rotate(-35deg)';
+                }
+                if(navIcon) {
+                    navIcon.style.transition = `transform ${secs}s ease-in-out`;
+                    navIcon.style.transform = isLeft ? 'rotate(20deg) scale(1.5)' : 'rotate(-20deg) scale(1.5)';
+                }
+                isLeft = !isLeft;
+
+                if(weight) {
+                    weight.style.background = '#ef4444';
+                    setTimeout(() => {
+                        if(weight) weight.style.background = 'linear-gradient(135deg, #fbbf24, #d97706)';
+                    }, 100);
+                }
+            }, Math.max(0, timeToBeat));
+        }
+
+        function nextNote() {
+            const secondsPerBeat = 60.0 / currentBpm;
+            nextNoteTime += secondsPerBeat;
+        }
+
+        function scheduler() {
+            if (!isMetroRunning || !audioCtx || audioCtx.state !== 'running') return;
+            while (nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
+                playClick(nextNoteTime);
+                nextNote();
+            }
+            metroInterval = setTimeout(scheduler, 25.0);
+        }
+
+        async function toggleMetronome(event) {
+            if (event) event.preventDefault();
+            const btn = document.getElementById('metroBtn');
+            const arm = document.getElementById('pendulumArm');
+            const navBtn = document.getElementById('btn-tab-metronome');
+
+            if(isMetroRunning) {
+                clearTimeout(metroInterval);
+                clearTimeout(beatFlashTimeout);
+                isMetroRunning = false;
+                navBtn.classList.remove('metro-pulse');
+                const navIcon = navBtn.querySelector('.nav-icon');
+                if(navIcon) {
+                    navIcon.style.transition = 'transform 0.3s ease-out';
+                    navIcon.style.transform = 'rotate(0deg) scale(1)';
+                }
+                btn.innerText = "Start Metronome";
+                btn.classList.remove('btn-timer-stop');
+                btn.classList.add('btn-metro');
+                if(arm) {
+                    arm.style.transition = 'transform 0.3s ease-out';
+                    arm.style.transform = 'rotate(0deg)';
+                }
+            } else {
+                btn.innerText = "Starting...";
+                btn.disabled = true;
+                const audioReady = await ensureMetronomeAudio();
+                btn.disabled = false;
+
+                if (!audioReady) {
+                    btn.innerText = "Start Metronome";
+                    return;
+                }
+
+                clearTimeout(metroInterval);
+                clearTimeout(beatFlashTimeout);
+                isMetroRunning = true;
+                navBtn.classList.add('metro-pulse');
+                isLeft = true;
+                nextNoteTime = audioCtx.currentTime + 0.02;
+                scheduler();
+                btn.innerText = "Stop Metronome";
+                btn.classList.remove('btn-metro');
+                btn.classList.add('btn-timer-stop');
+            }
+        }
+
+        // 14. Export/Import & Extra visual functions
+        function exportData() {
+            if (!window.jspdf) {
+                showInAppModal("Error", "PDF library failed to load. Please check your internet connection.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            
+            // Header Section
+            doc.setFillColor(59, 130, 246);
+            doc.rect(0, 0, pageWidth, 40, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.text("Virtuoso Practice Report", 20, 25);
+            
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Generated on ${getTodayDateString()}`, 20, 33);
+            
+            let y = 55;
+            doc.setTextColor(30, 41, 59);
+
+            if (sessions.length === 0) {
+                doc.text("No practice sessions recorded yet.", 20, y);
+            } else {
+                [...sessions].sort((a,b) => b.id - a.id).forEach((session) => {
+                    if (y > 260) {
+                        doc.addPage();
+                        y = 20;
+                    }
+
+                    doc.setFontSize(14);
+                    doc.setFont("helvetica", "bold");
+                    doc.text(`${session.pieceName} ${session.isFocus ? '(Focus Piece)' : ''}`, 20, y);
+                    y += 7;
+
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "normal");
+                    doc.setTextColor(100, 116, 139);
+                    doc.text(`Date: ${session.date} | ${session.minutes}m | ${session.instrument} | Rating: ${session.rating}/5`, 20, y);
+                    y += 8;
+
+                    doc.setTextColor(30, 41, 59);
+                    if (session.aiReview) {
+                        doc.setFont("helvetica", "bold");
+                        doc.text("AI Insight:", 20, y);
+                        doc.setFont("helvetica", "italic");
+                        doc.text(`${session.aiReview.tier} (${session.aiReview.ratio}% musicality)`, 40, y);
+                        y += 6;
+                        const insightLines = doc.splitTextToSize(session.aiReview.insight, pageWidth - 40);
+                        doc.text(insightLines, 20, y);
+                        y += (insightLines.length * 5) + 5;
+                    }
+
+                    if (session.notes) {
+                        doc.setFont("helvetica", "bold");
+                        doc.text("Notes:", 20, y);
+                        doc.setFont("helvetica", "normal");
+                        const noteLines = doc.splitTextToSize(session.notes, pageWidth - 45);
+                        doc.text(noteLines, 35, y);
+                        y += (noteLines.length * 5) + 5;
+                    }
+
+                    y += 10;
+                    doc.setDrawColor(226, 232, 240);
+                    doc.line(20, y - 5, pageWidth - 20, y - 5);
+                    y += 5;
+                });
+            }
+
+            doc.save(`virtuoso_report_${getTodayDateString()}.pdf`);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if(Array.isArray(imported)) {
+                        sessions = imported;
+                        saveData();
+                        updateUI();
+                        showInAppModal("Import Successful", "✅ Your practice history has been restored.");
+                    } else {
+                        showInAppModal("Import Error", "❌ Invalid file format. Please use a Virtuoso JSON backup.");
+                    }
+                } catch(err) {
+                    showInAppModal("Import Error", "❌ Error parsing the JSON file.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // reset input
+        }
+
+        function renderAchievements() {
+            const container = document.getElementById('achievementsList');
+            if (!container) return;
+            if (!userSettings.achievements) {
+                container.innerHTML = `
+                    <div class="feature-disabled-panel">
+                        Achievements are turned off in Settings.
+                        <button class="btn-add" type="button" onclick="enableFeature('achievements')">Turn On Achievements</button>
+                    </div>
+                `;
+                return;
+            }
+            const streak = calculateStreak();
+            const totalOverall = sessions.reduce((sum, s) => sum + getSessionMinutes(s), 0);
+            const totalToday = sessions
+                .filter(s => s.date === getTodayDateString())
+                .reduce((sum, s) => sum + getSessionMinutes(s), 0);
+            const uniquePieces = new Set(sessions.map(s => s.pieceName).filter(Boolean)).size;
+            const uniquePracticeDays = getUniquePracticeDates().length;
+            const focusSessions = sessions.filter(s => s.isFocus).length;
+            const dailyGoal = userSettings.dailyGoal || 30;
+            
+            const achievements = [
+                { id: 'first', name: 'First Note', desc: 'Log your first practice', icon: '🎵', condition: sessions.length > 0, progress: `${Math.min(sessions.length, 1)}/1 session` },
+                { id: 'goal', name: 'Goal Getter', desc: 'Hit your daily goal', icon: '🎯', condition: totalToday >= dailyGoal, progress: `${Math.min(totalToday, dailyGoal)}/${dailyGoal}m today` },
+                { id: 'streak3', name: 'Consistent', desc: '3 day practice streak', icon: '🔥', condition: streak >= 3, progress: `${Math.min(streak, 3)}/3 day streak` },
+                { id: 'streak7', name: 'Dedicated', desc: '7 day practice streak', icon: '📅', condition: streak >= 7, progress: `${Math.min(streak, 7)}/7 day streak` },
+                { id: 'pieces3', name: 'Repertoire', desc: 'Practice 3 different pieces', icon: '🎼', condition: uniquePieces >= 3, progress: `${Math.min(uniquePieces, 3)}/3 pieces` },
+                { id: 'focus5', name: 'Deep Work', desc: 'Log 5 focus-piece sessions', icon: '⭐', condition: focusSessions >= 5, progress: `${Math.min(focusSessions, 5)}/5 focus sessions` },
+                { id: 'days10', name: 'Habit Builder', desc: 'Practice on 10 different days', icon: '🗓️', condition: uniquePracticeDays >= 10, progress: `${Math.min(uniquePracticeDays, 10)}/10 practice days` },
+                { id: 'hours10', name: 'Maestro', desc: '10+ hours total practice', icon: '🏆', condition: totalOverall >= 600, progress: `${Math.min(Math.floor(totalOverall / 60), 10)}/10 hours` }
+            ];
+
+            container.innerHTML = '';
+            achievements.forEach(a => {
+                const badge = document.createElement('div');
+                badge.className = `badge ${a.condition ? 'unlocked' : ''}`;
+                badge.innerHTML = `
+                    <div class="badge-icon">${a.icon}</div>
+                    <div>${a.name}</div>
+                    <div class="badge-progress">${a.progress}</div>
+                    <div class="badge-state">${a.condition ? 'Unlocked' : 'Locked'}</div>
+                `;
+                badge.title = a.desc;
+                container.appendChild(badge);
+            });
+        }
+
+        function renderCharts() {
+            // Weekly Chart
+            const weeklyChart = document.getElementById('weeklyChart');
+            if(!weeklyChart) return;
+            weeklyChart.innerHTML = '';
+            const pieceChart = document.getElementById('pieceChart');
+            if (!userSettings.charts) {
+                weeklyChart.innerHTML = '<div class="empty-message">Charts are turned off in Settings.</div>';
+                if (pieceChart) pieceChart.innerHTML = '<div class="empty-message">Charts are turned off in Settings.</div>';
+                return;
+            }
+            
+            let last7Days = [];
+            for(let i=6; i>=0; i--) {
+                let d = new Date();
+                d.setDate(d.getDate() - i);
+                let y = d.getFullYear();
+                let m = String(d.getMonth() + 1).padStart(2, '0');
+                let day = String(d.getDate()).padStart(2, '0');
+                last7Days.push(`${y}-${m}-${day}`);
+            }
+
+            let maxWeeklyMins = 1; 
+            let weeklyData = last7Days.map(dateStr => {
+                let mins = sessions.filter(s => s.date === dateStr).reduce((sum, s) => sum + s.minutes, 0);
+                if(mins > maxWeeklyMins) maxWeeklyMins = mins;
+                let shortDate = dateStr.substring(5).replace('-', '/');
+                return { date: shortDate, mins };
+            });
+
+            weeklyData.forEach(d => {
+                let h = Math.max(5, (d.mins / maxWeeklyMins) * 70); // Max 70% of container height
+                weeklyChart.innerHTML += `
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-val">${d.mins}m</div>
+                        <div class="chart-bar" style="height: ${h}%"></div>
+                        <div class="chart-label">${d.date}</div>
+                    </div>
+                `;
+            });
+
+            // Piece Chart
+            if(!pieceChart) return;
+            pieceChart.innerHTML = '';
+            
+            const pieceTotals = {};
+            sessions.forEach(s => {
+                pieceTotals[s.pieceName] = (pieceTotals[s.pieceName] || 0) + s.minutes;
+            });
+            
+            let piecesArray = Object.keys(pieceTotals).map(k => ({ name: k, mins: pieceTotals[k] }));
+            piecesArray.sort((a,b) => b.mins - a.mins);
+            piecesArray = piecesArray.slice(0, 5); // top 5
+            
+            let maxPieceMins = piecesArray.length ? Math.max(...piecesArray.map(p=>p.mins)) : 1;
+            
+            piecesArray.forEach(p => {
+                let h = Math.max(5, (p.mins / maxPieceMins) * 70);
+                let shortName = p.name.length > 8 ? p.name.substring(0,8)+'..' : p.name;
+                const safeName = escapeHTML(p.name);
+                const safeShortName = escapeHTML(shortName);
+                pieceChart.innerHTML += `
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-val">${p.mins}m</div>
+                        <div class="chart-bar" style="height: ${h}%; background: linear-gradient(to top, #10b981, #34d399);"></div>
+                        <div class="chart-label" title="${safeName}">${safeShortName}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderRecommendations() {
+            const container = document.getElementById('recommendations');
+            if (!container) return;
+            container.innerHTML = '';
+            if (!userSettings.recommendations) return;
+            
+            if (sessions.length === 0) return;
+
+            // Track the last practice date for each piece
+            const pieceLastDate = {};
+            sessions.forEach(s => {
+                const dateObj = new Date(s.date + 'T00:00:00');
+                if (!pieceLastDate[s.pieceName] || dateObj > pieceLastDate[s.pieceName]) {
+                    pieceLastDate[s.pieceName] = dateObj;
+                }
+            });
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const staleThreshold = 3; // days
+
+            const recs = [];
+            for (const [name, lastDate] of Object.entries(pieceLastDate)) {
+                const diffTime = today - lastDate;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays >= staleThreshold) {
+                    recs.push({ name, days: diffDays });
+                }
+            }
+
+            // Sort by longest time since practice and show top 2
+            recs.sort((a, b) => b.days - a.days).slice(0, 2).forEach(rec => {
+                const card = document.createElement('div');
+                card.className = 'recommendation-card';
+                const safeName = escapeHTML(rec.name);
+                card.innerHTML = `
+                    <div class="rec-icon">💡</div>
+                    <div class="rec-text">It's been <strong>${rec.days} days</strong> since you practiced <strong>${safeName}</strong>. Ready to dive back in?</div>
+                    <button class="rec-btn" type="button">Let's go</button>
+                `;
+                card.querySelector('.rec-btn').addEventListener('click', () => fillPracticePiece(rec.name));
+                container.appendChild(card);
+            });
+        }
+
+        function fillPracticePiece(name) {
+            document.getElementById('pieceName').value = name;
+            document.getElementById('pieceName').focus();
+        }
+
+        // Pitch Detection Helpers for "Musical Note" Analysis
+        const noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        function autoCorrelate(buf, sampleRate) {
+            const SIZE = buf.length;
+            let rms = 0;
+            for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+            rms = Math.sqrt(rms / SIZE);
+            if (rms < 0.008) return -1;
+
+            const minFrequency = 45;
+            const maxFrequency = 4200;
+            const minOffset = Math.max(2, Math.floor(sampleRate / maxFrequency));
+            const maxOffset = Math.min(SIZE - 2, Math.ceil(sampleRate / minFrequency));
+            let bestOffset = -1;
+            let bestCorrelation = 0;
+
+            for (let offset = minOffset; offset <= maxOffset; offset++) {
+                let correlation = 0;
+                let sampleCount = 0;
+                for (let i = 0; i < SIZE - offset; i += 2) {
+                    correlation += 1 - Math.abs(buf[i] - buf[i + offset]);
+                    sampleCount++;
+                }
+                correlation = correlation / sampleCount;
+                if (correlation > bestCorrelation) {
+                    bestCorrelation = correlation;
+                    bestOffset = offset;
+                }
+            }
+
+            if (bestCorrelation < 0.88 || bestOffset <= 0) return -1;
+            return sampleRate / bestOffset;
+        }
+
+        // 15. Microphone Auto-Rate Logic
+        let isMicListening = false;
+        let micStream = null;
+        let audioContextMic = null;
+        let analyserMic = null;
+        let micDataArray = null;
+        let micFrequencyArray = null;
+        let micAnimFrame = null;
+        let activityScores = [];
+        let micAnalysisStartedAt = null;
+        let micNoiseFloor = 0.012;
+        let lastMusicalHitAt = 0;
+        let lastDetectedNote = "";
+
+        async function startMicAnalysis() {
+            const status = document.getElementById('micStatus');
+            const vis = document.getElementById('micVisualizer');
+            const feedback = document.getElementById('micFeedback');
+
+            try {
+                // Request microphone access
+                micStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false
+                    }
+                });
+                audioContextMic = new (window.AudioContext || window.webkitAudioContext)();
+                analyserMic = audioContextMic.createAnalyser();
+                const source = audioContextMic.createMediaStreamSource(micStream);
+                source.connect(analyserMic);
+
+                analyserMic.fftSize = 4096;
+                analyserMic.smoothingTimeConstant = 0.82;
+                const bufferLength = analyserMic.fftSize;
+                micDataArray = new Float32Array(bufferLength);
+                micFrequencyArray = new Uint8Array(analyserMic.frequencyBinCount);
+
+                isMicListening = true;
+                activityScores = [];
+                micAnalysisStartedAt = Date.now();
+                micNoiseFloor = 0.012;
+                lastMusicalHitAt = 0;
+                lastDetectedNote = "";
+                
+                status.style.display = "block";
+                feedback.style.display = "none";
+                status.innerText = "Listening... play a few notes so I can calibrate.";
+                vis.style.display = "block";
+
+                checkAudioLevel();
+            } catch (err) {
+                isMicListening = false;
+                document.getElementById('micToggleSwitch').checked = false;
+                showInAppModal("Mic Access Error", "Could not access microphone. Please ensure permissions are granted in your browser settings.");
+                console.error(err);
+            }
+        }
+
+        function getMicMetrics() {
+            analyserMic.getFloatTimeDomainData(micDataArray);
+            analyserMic.getByteFrequencyData(micFrequencyArray);
+
+            let sumSquares = 0;
+            let peak = 0;
+            for (let i = 0; i < micDataArray.length; i++) {
+                const sample = micDataArray[i];
+                sumSquares += sample * sample;
+                peak = Math.max(peak, Math.abs(sample));
+            }
+            const rms = Math.sqrt(sumSquares / micDataArray.length);
+
+            if (rms < micNoiseFloor * 1.4) {
+                micNoiseFloor = (micNoiseFloor * 0.96) + (rms * 0.04);
+            }
+
+            let frequencyEnergy = 0;
+            let weightedFrequency = 0;
+            const nyquist = audioContextMic.sampleRate / 2;
+            for (let i = 1; i < micFrequencyArray.length; i++) {
+                const frequency = (i / micFrequencyArray.length) * nyquist;
+                if (frequency < 55 || frequency > 4200) continue;
+                const energy = micFrequencyArray[i] / 255;
+                frequencyEnergy += energy;
+                weightedFrequency += energy * frequency;
+            }
+            const centroid = frequencyEnergy > 0 ? weightedFrequency / frequencyEnergy : 0;
+            const pitch = autoCorrelate(micDataArray, audioContextMic.sampleRate);
+            const hasPitch = pitch !== -1 && pitch > 45 && pitch < 4200;
+            const hasPianoEnergy = rms > Math.max(0.018, micNoiseFloor * 2.4) && centroid > 80 && centroid < 2600;
+            const hasAttack = peak > Math.max(0.08, micNoiseFloor * 5);
+
+            return { rms, peak, pitch, hasPitch, hasPianoEnergy, hasAttack };
+        }
+
+        function checkAudioLevel() {
+            if (!isMicListening) return;
+            
+            const metrics = getMicMetrics();
+            const status = document.getElementById('micStatus');
+            const bar = document.getElementById('micLevel');
+            const now = Date.now();
+
+            let isMusicalActivity = false;
+            if (metrics.hasPitch) {
+                const noteNum = Math.round(12 * (Math.log(metrics.pitch / 440) / Math.log(2))) + 69;
+                const noteName = noteStrings[((noteNum % 12) + 12) % 12];
+                lastDetectedNote = noteName;
+                lastMusicalHitAt = now;
+                isMusicalActivity = true;
+            } else if (metrics.hasPianoEnergy || metrics.hasAttack || now - lastMusicalHitAt < 450) {
+                isMusicalActivity = true;
+            }
+
+            const level = Math.min(100, Math.max(8, Math.round((metrics.rms / 0.09) * 100)));
+            bar.style.width = `${level}%`;
+            bar.style.background = isMusicalActivity ? '#3b82f6' : '#94a3b8';
+            status.innerText = lastDetectedNote && now - lastMusicalHitAt < 1200
+                ? `Listening... detected ${lastDetectedNote}`
+                : "Listening... tracking tone and rhythm.";
+
+            activityScores.push({
+                active: isMusicalActivity ? 1 : 0,
+                pitched: metrics.hasPitch ? 1 : 0,
+                rms: metrics.rms,
+                time: now
+            });
+
+            micAnimFrame = requestAnimationFrame(checkAudioLevel);
+        }
+
+        function stopMicAnalyzerAndRate(elapsedSeconds = null) {
+            isMicListening = false;
+            cancelAnimationFrame(micAnimFrame);
+
+            if (micStream) {
+                micStream.getTracks().forEach(track => track.stop());
+            }
+            if (audioContextMic && audioContextMic.state !== 'closed') {
+                audioContextMic.close();
+            }
+
+            const status = document.getElementById('micStatus');
+            const feedbackBox = document.getElementById('micFeedback');
+            const vis = document.getElementById('micVisualizer');
+
+            vis.style.display = "none";
+            micStream = null;
+            audioContextMic = null;
+            analyserMic = null;
+
+            const analysisSeconds = micAnalysisStartedAt ? (Date.now() - micAnalysisStartedAt) / 1000 : 0;
+            if (activityScores.length < 8 || analysisSeconds < 0.75) {
+                status.innerText = "Listening too short to rate.";
+                setTimeout(() => status.style.display = "none", 3000);
+                if (elapsedSeconds !== null) {
+                    document.getElementById('practiceMinutes').value = elapsedSeconds > 0 ? Math.max(1, Math.ceil(elapsedSeconds / 60)) : "";
+                }
+                return;
+            }
+
+            const activeFrames = activityScores.reduce((sum, sample) => sum + sample.active, 0);
+            const pitchedFrames = activityScores.reduce((sum, sample) => sum + sample.pitched, 0);
+            const averageRms = activityScores.reduce((sum, sample) => sum + sample.rms, 0) / activityScores.length;
+            const activityRatio = activeFrames / activityScores.length;
+            const pitchRatio = pitchedFrames / activityScores.length;
+
+            // If we have elapsed time from a timer, calculate the "Actual Played" minutes
+            if (elapsedSeconds !== null) {
+                const actualPlayedSeconds = elapsedSeconds * activityRatio;
+                const finalMins = activityRatio > 0.04 ? Math.max(1, Math.ceil(actualPlayedSeconds / 60)) : Math.max(1, Math.ceil(elapsedSeconds / 60));
+                document.getElementById('practiceMinutes').value = finalMins;
+            }
+
+            let calculatedRating = 1; 
+            let insight = "";
+            let tier = "Getting Started";
+
+            if (activityRatio > 0.75 && pitchRatio > 0.18) { calculatedRating = 5; tier = "Virtuoso Performance"; insight = "Excellent continuity and clear tone. Your playing stayed active with strong note definition."; }
+            else if (activityRatio > 0.55) { calculatedRating = 4; tier = "Focused Flow"; insight = "Strong session. I heard steady musical activity with healthy pauses for resets."; }
+            else if (activityRatio > 0.32) { calculatedRating = 3; tier = "Solid Progress"; insight = "Good work. There was a useful mix of playing and stopping to fix details."; }
+            else if (activityRatio > 0.12 || averageRms > micNoiseFloor * 1.8) { calculatedRating = 2; tier = "Keep Going"; insight = "I heard some playing. Try placing the device closer to the piano or using a quieter room for better analysis."; }
+            else { insight = "I did not hear enough clear piano sound. Move the microphone closer and play a few strong notes before starting."; }
+            
+            // Save the data so it can be picked up by saveSession()
+            lastAiReview = {
+                ratio: Math.round(activityRatio * 100),
+                pitchRatio: Math.round(pitchRatio * 100),
+                tier: tier,
+                insight: insight
+            };
+
+            currentRating = calculatedRating;
+            updateStars();
+
+            status.style.display = "none";
+            feedbackBox.style.display = "block";
+            feedbackBox.innerHTML = `
+                <div style="font-weight: 800; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>📊 Session Insights</span>
+                    <span style="font-size: 0.7rem; background: #3b82f6; color: white; padding: 2px 8px; border-radius: 20px;">${tier}</span>
+                </div>
+                <div style="line-height: 1.4;">
+                    <strong>${Math.round(activityRatio * 100)}%</strong> active playing detected · <strong>${Math.round(pitchRatio * 100)}%</strong> clear pitch lock.<br>
+                    <span style="font-style: italic; opacity: 0.9;">"${insight}"</span>
+                </div>
+            `;
+            
+            setTimeout(() => {
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
